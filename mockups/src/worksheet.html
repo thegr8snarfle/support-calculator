@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Colorado Support Worksheet — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../theme.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv05" 1;
+  }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+  /* ---------- App shell ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: var(--sp-4);
+    padding: var(--sp-4) var(--sp-6);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: var(--sp-3); }
+  .brand .mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(150deg, var(--primary), var(--accent));
+    display: grid; place-items: center; color: #fff; font-weight: 700;
+    font-family: var(--font-display); box-shadow: var(--shadow-sm);
+  }
+  .brand b { font-family: var(--font-display); font-weight: 700; letter-spacing: -.01em; }
+  .brand span { color: var(--text-muted); font-size: 13px; }
+  .topbar .spacer { flex: 1; }
+  .steps { display: flex; align-items: center; gap: var(--sp-2); font-size: 13px; color: var(--text-subtle); }
+  .steps .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); }
+  .steps .on { color: var(--text); font-weight: 600; }
+  .steps .on .dot { background: var(--primary); }
+  .theme-chip {
+    font-size: 12px; color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: var(--r-pill);
+    padding: 5px 12px; display: flex; gap: 7px; align-items: center;
+  }
+  .theme-chip .sw { width: 11px; height: 11px; border-radius: 50%; background: var(--primary); }
+  .theme-chip .sw2 { background: var(--accent); margin-left: -4px; }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 1240px; margin: 0 auto; padding: var(--sp-6); }
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: var(--sp-6); align-items: start; }
+
+  .page-head { margin-bottom: var(--sp-5); }
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--accent-strong);
+  }
+  h1 { font-family: var(--font-display); font-weight: 700; font-size: 32px; letter-spacing: -.02em; margin: 6px 0 6px; }
+  .lede { color: var(--text-muted); max-width: 56ch; margin: 0; }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: var(--sp-5);
+    box-shadow: var(--shadow-sm); margin-bottom: var(--sp-5);
+  }
+  .card-head { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .card-head .n {
+    font-family: var(--font-display); font-weight: 700; font-size: 13px;
+    color: var(--primary); background: var(--primary-weak);
+    width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex: none;
+  }
+  .card-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 18px; margin: 0; letter-spacing: -.01em; }
+  .card-head p { margin: 2px 0 0; font-size: 13px; color: var(--text-muted); }
+
+  .help {
+    display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--surface-2); color: var(--text-muted); font-size: 11px; font-weight: 700;
+    border: 1px solid var(--border); vertical-align: middle; margin-left: 5px; cursor: help;
+  }
+
+  /* ---------- Two-party grid ---------- */
+  .party-head { display: grid; grid-template-columns: 1fr 148px 148px; gap: var(--sp-3); align-items: end; padding: 0 var(--sp-1) var(--sp-2); }
+  .party-head .plabel { display: flex; align-items: center; gap: 8px; justify-content: flex-end; font-weight: 600; font-size: 13px; }
+  .party-head .plabel::before { content:""; width: 9px; height: 9px; border-radius: 50%; }
+  .party-head .pa .plabel-dot, .party-head .pa::before { }
+  .pa .plabel::before { background: var(--primary); }
+  .pb .plabel::before { background: var(--accent); }
+
+  .row {
+    display: grid; grid-template-columns: 1fr 148px 148px; gap: var(--sp-3); align-items: center;
+    padding: var(--sp-3) var(--sp-1); border-top: 1px solid var(--border);
+  }
+  .row .label { font-size: 14px; }
+  .row .label small { display: block; color: var(--text-subtle); font-size: 12px; }
+
+  /* ---------- Inputs ---------- */
+  .money { position: relative; }
+  .money::before {
+    content: "$"; position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    color: var(--text-subtle); font-size: 14px;
+  }
+  input.field, .selectish {
+    width: 100%; height: 40px; border: 1px solid var(--border); background: var(--surface);
+    border-radius: var(--r-md); color: var(--text); font: inherit; text-align: right;
+    padding: 0 12px 0 22px; font-variant-numeric: tabular-nums;
+  }
+  input.field::placeholder { color: var(--text-subtle); }
+  input.field:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
+  .row.focused input.field { border-color: var(--primary); box-shadow: var(--focus-ring); }
+
+  /* segmented toggle */
+  .seg { display: inline-flex; background: var(--surface-2); border-radius: var(--r-pill); padding: 3px; gap: 2px; }
+  .seg button {
+    border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px;
+    padding: 5px 12px; border-radius: var(--r-pill); cursor: pointer;
+  }
+  .seg button.on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }
+
+  /* stepper */
+  .stepper { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--r-pill); overflow: hidden; }
+  .stepper button { width: 40px; height: 40px; border: 0; background: var(--surface); color: var(--primary); font-size: 20px; cursor: pointer; }
+  .stepper .val { min-width: 48px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kids-line { display: flex; align-items: center; gap: var(--sp-4); }
+  .kids-line .hint { color: var(--text-muted); font-size: 13px; }
+
+  /* ---------- Signature: parenting-time balance bar ---------- */
+  .pt-grid { display: grid; grid-template-columns: 1fr 148px 148px; gap: var(--sp-3); align-items: center; padding: var(--sp-3) var(--sp-1); }
+  .pt-bar-wrap { margin-top: var(--sp-4); }
+  .pt-bar {
+    position: relative; height: 46px; border-radius: var(--r-md); overflow: hidden;
+    display: flex; box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .pt-a { background: var(--primary); }
+  .pt-b { background: var(--accent); }
+  .pt-a, .pt-b { display: flex; align-items: center; color: #fff; font-size: 13px; font-weight: 600; }
+  .pt-a { justify-content: flex-start; padding-left: 14px; }
+  .pt-b { justify-content: flex-end; padding-right: 14px; color: #3a2410; }
+  .pt-scale { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--text-subtle); }
+  .pt-legend { display: flex; gap: var(--sp-5); margin-top: var(--sp-4); font-size: 13px; }
+  .pt-legend .k { display: flex; align-items: center; gap: 8px; }
+  .pt-legend .k b { font-variant-numeric: tabular-nums; }
+  .pt-legend .chip { width: 12px; height: 12px; border-radius: 4px; }
+
+  /* ---------- Results rail ---------- */
+  .rail { position: sticky; top: var(--sp-5); }
+  .result {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md); overflow: hidden;
+  }
+  .result .cap {
+    padding: var(--sp-4) var(--sp-5) 0; font-size: 12px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);
+  }
+  .result .big { padding: 2px var(--sp-5) var(--sp-2); }
+  .result .amt {
+    font-family: var(--font-display); font-weight: 700; font-size: 46px; letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums; line-height: 1.05;
+    display: inline-block; padding-bottom: 4px;
+    background: linear-gradient(transparent 78%, var(--accent-weak) 78%);
+    box-shadow: inset 0 -3px 0 var(--accent);
+  }
+  .result .amt small { font-size: 17px; font-weight: 600; color: var(--text-muted); -webkit-text-fill-color: initial; }
+  .result .who { padding: 0 var(--sp-5) var(--sp-4); color: var(--text-muted); font-size: 14px; }
+  .result .who b { color: var(--primary); font-weight: 700; }
+  .result .who .to { color: var(--positive); font-weight: 700; }
+
+  .breakdown { border-top: 1px solid var(--border); padding: var(--sp-4) var(--sp-5); }
+  .bd-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 13px; }
+  .bd-row .lab { color: var(--text-muted); }
+  .bd-row .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .bd-row.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 12px; font-size: 14px; }
+  .bd-row.total .lab { color: var(--text); font-weight: 700; }
+  .share { display: flex; height: 8px; border-radius: 999px; overflow: hidden; margin: 4px 0 10px; box-shadow: inset 0 0 0 1px var(--border); }
+  .share .sa { background: var(--primary); }
+  .share .sb { background: var(--accent); }
+
+  .actions { padding: 0 var(--sp-5) var(--sp-5); display: grid; gap: var(--sp-2); }
+  .btn { height: 44px; border-radius: var(--r-md); font: inherit; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+  .btn.primary { background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-sm); }
+  .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
+
+  .foot-note { margin-top: var(--sp-4); font-size: 11.5px; color: var(--text-subtle); line-height: 1.5; }
+  .foot-note code { color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">C</div>
+      <div>
+        <b>Columbine</b> &nbsp;<span>Colorado Support Estimator</span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <nav class="steps">
+      <span class="on"><span class="dot"></span> Worksheet</span>
+      <span>·</span>
+      <span><span class="dot"></span> Review</span>
+      <span>·</span>
+      <span><span class="dot"></span> Results</span>
+    </nav>
+    <div class="theme-chip"><span class="sw"></span><span class="sw sw2"></span> Columbine</div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <div class="eyebrow">Child Support · Unified Worksheet</div>
+      <h1>Let's estimate monthly support.</h1>
+      <p class="lede">Enter each parent's income, time with the children, and shared costs. Your estimate updates as you go — nothing is filed and nothing is saved.</p>
+    </div>
+
+    <div class="layout">
+      <!-- LEFT: worksheet -->
+      <div>
+        <!-- 1. Children -->
+        <section class="card">
+          <div class="card-head">
+            <div class="n">1</div>
+            <div>
+              <h2>Children in this case</h2>
+              <p>How many children is this support order for?</p>
+            </div>
+          </div>
+          <div class="kids-line">
+            <div class="stepper">
+              <button aria-label="fewer">–</button>
+              <span class="val">2</span>
+              <button aria-label="more">+</button>
+            </div>
+            <span class="hint">Only children the two parents share and who are eligible for support.</span>
+          </div>
+        </section>
+
+        <!-- 2. Income -->
+        <section class="card">
+          <div class="card-head">
+            <div class="n">2</div>
+            <div>
+              <h2>Monthly income</h2>
+              <p>Gross monthly amounts, before taxes. <span class="help">?</span></p>
+            </div>
+          </div>
+
+          <div class="party-head">
+            <div></div>
+            <div class="pa"><div class="plabel">Taylor</div></div>
+            <div class="pb"><div class="plabel">Blake</div></div>
+          </div>
+
+          <div class="row focused">
+            <div class="label">Gross monthly income <small>Wages, salary, tips</small></div>
+            <div class="money"><input class="field num" value="4,800" /></div>
+            <div class="money"><input class="field num" value="6,500" /></div>
+          </div>
+          <div class="row">
+            <div class="label">Self-employment income <small>Net of business expenses</small></div>
+            <div class="money"><input class="field num" placeholder="0" /></div>
+            <div class="money"><input class="field num" value="0" /></div>
+          </div>
+          <div class="row">
+            <div class="label">Maintenance <small>Alimony paid or received</small></div>
+            <div class="money"><input class="field num" placeholder="0" /></div>
+            <div class="money"><input class="field num" placeholder="0" /></div>
+          </div>
+          <div class="row">
+            <div class="label">Support for other children <small>Existing orders</small></div>
+            <div class="money"><input class="field num" placeholder="0" /></div>
+            <div class="money"><input class="field num" value="450" /></div>
+          </div>
+        </section>
+
+        <!-- 3. Parenting time (signature) -->
+        <section class="card">
+          <div class="card-head">
+            <div class="n">3</div>
+            <div>
+              <h2>Parenting time</h2>
+              <p>Overnights with each parent per year (out of 365). <span class="help">?</span></p>
+            </div>
+          </div>
+
+          <div class="pt-grid">
+            <div class="label">Overnights per year</div>
+            <div><input class="field num" value="219" style="padding-left:12px" /></div>
+            <div><input class="field num" value="146" style="padding-left:12px" /></div>
+          </div>
+
+          <div class="pt-bar-wrap">
+            <div class="pt-bar">
+              <div class="pt-a" style="width:60%">Taylor</div>
+              <div class="pt-b" style="width:40%">Blake</div>
+            </div>
+            <div class="pt-scale"><span>0</span><span>183</span><span>365 nights</span></div>
+            <div class="pt-legend">
+              <div class="k"><span class="chip" style="background:var(--primary)"></span> Taylor <b>219 nights · 60%</b></div>
+              <div class="k"><span class="chip" style="background:var(--accent)"></span> Blake <b>146 nights · 40%</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Shared costs -->
+        <section class="card">
+          <div class="card-head">
+            <div class="n">4</div>
+            <div>
+              <h2>Monthly shared costs</h2>
+              <p>Added to the obligation and split by income share.</p>
+            </div>
+          </div>
+
+          <div class="row" style="border-top:0">
+            <div class="label">Work-related childcare</div>
+            <div class="money" style="grid-column: 2 / span 2"><input class="field num" value="780" /></div>
+          </div>
+          <div class="row">
+            <div class="label">Children's health insurance <small>Premium for the children's portion</small></div>
+            <div class="money" style="grid-column: 2 / span 2"><input class="field num" value="240" /></div>
+          </div>
+          <div class="row">
+            <div class="label">Extraordinary medical <small>Recurring, over $250/yr</small></div>
+            <div class="money" style="grid-column: 2 / span 2"><input class="field num" value="60" /></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT: results rail -->
+      <aside class="rail">
+        <div class="result">
+          <div class="cap">Estimated monthly support</div>
+          <div class="big"><span class="amt num">$842<small>/mo</small></span></div>
+          <div class="who"><b>Blake</b> pays <span class="to">Taylor</span> each month.</div>
+
+          <div class="breakdown">
+            <div class="bd-row">
+              <span class="lab">Combined income</span>
+              <span class="v num">$11,300</span>
+            </div>
+            <div class="share"><span class="sa" style="width:42.5%"></span><span class="sb" style="width:57.5%"></span></div>
+            <div class="bd-row" style="padding-top:0">
+              <span class="lab">Income share</span>
+              <span class="v num">Taylor 42.5% · Blake 57.5%</span>
+            </div>
+
+            <div class="bd-row"><span class="lab">Basic obligation</span><span class="v num">$1,986</span></div>
+            <div class="bd-row"><span class="lab">Parenting-time adjustment</span><span class="v num" style="color:var(--positive)">−$612</span></div>
+            <div class="bd-row"><span class="lab">Childcare + health + medical</span><span class="v num">$1,080</span></div>
+            <div class="bd-row total"><span class="lab">Blake's share, net</span><span class="v num">$842</span></div>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary">Review full worksheet</button>
+            <button class="btn ghost">Print / Export PDF</button>
+          </div>
+        </div>
+        <p class="foot-note">
+          Estimate only, using Colorado's unified child-support guideline (<code>C.R.S. §14-10-115</code>,
+          schedule effective March 1, 2026). Courts may deviate. Not legal advice.
+        </p>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Theme toggle for rendering both variants from one source: append ?theme=dark
+    if (location.search.indexOf('dark') !== -1) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
+</body>
+</html>

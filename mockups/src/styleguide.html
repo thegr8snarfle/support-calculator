@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Columbine — Component Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../theme.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .num { font-variant-numeric: tabular-nums; }
+  .sheet { max-width: 1160px; margin: 0 auto; padding: 48px; }
+
+  .sg-head { display: flex; align-items: flex-end; gap: 20px; margin-bottom: 8px; }
+  .sg-head .mark { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(150deg, var(--primary), var(--accent)); display:grid; place-items:center; color:#fff; font-family: var(--font-display); font-weight:700; font-size:22px; }
+  .sg-head h1 { font-family: var(--font-display); font-weight: 700; font-size: 34px; letter-spacing: -.02em; margin: 0; }
+  .sg-head p { margin: 2px 0 0; color: var(--text-muted); }
+  .sg-sub { color: var(--text-muted); margin: 0 0 40px; max-width: 60ch; }
+
+  section { margin-bottom: 44px; }
+  .sec-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-strong); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .grid { display: grid; gap: 16px; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; box-shadow: var(--shadow-sm); }
+  .cap { font-size: 12px; color: var(--text-subtle); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .h3 { font-family: var(--font-display); font-weight: 600; font-size: 15px; margin: 0 0 12px; }
+
+  /* palette */
+  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .sw { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .sw .chip { height: 56px; }
+  .sw .meta { padding: 8px 9px; }
+  .sw .nm { font-size: 12px; font-weight: 600; }
+  .sw .hex { font-size: 11px; color: var(--text-subtle); font-variant-numeric: tabular-nums; }
+  .dark-scope { background: #14141B; border-radius: var(--r-lg); padding: 18px; }
+  .dark-scope .sw { border-color: #33333F; }
+  .dark-scope .nm { color: #ECECF2; }
+  .dark-scope .hex { color: #6E6E80; }
+
+  /* type scale */
+  .type-row { display: flex; align-items: baseline; gap: 18px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .type-row .t-meta { width: 150px; flex: none; font-size: 12px; color: var(--text-subtle); font-variant-numeric: tabular-nums; }
+  .disp { font-family: var(--font-display); letter-spacing: -.02em; }
+
+  /* component demos reuse worksheet styles (compact) */
+  .field { width: 200px; height: 40px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-md); color: var(--text); font: inherit; padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  .field.focus { border-color: var(--primary); box-shadow: var(--focus-ring); outline: none; }
+  .field.err { border-color: var(--alert); box-shadow: 0 0 0 3px var(--alert-weak); }
+  .field:disabled, .field.dis { background: var(--surface-2); color: var(--text-subtle); }
+  .fieldwrap { display: grid; gap: 6px; }
+  .flabel { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+  .money { position: relative; width: 200px; }
+  .money::before { content:"$"; position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-subtle); }
+  .money .field { width: 100%; padding-left: 22px; }
+  .err-msg { color: var(--alert); font-size: 12px; }
+
+  .btn { height: 42px; padding: 0 20px; border-radius: var(--r-md); font: inherit; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+  .btn.primary { background: var(--primary); color: var(--on-primary); }
+  .btn.secondary { background: var(--primary-weak); color: var(--primary); }
+  .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn.focus { box-shadow: var(--focus-ring); }
+  .btnrow { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  .seg { display: inline-flex; background: var(--surface-2); border-radius: var(--r-pill); padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; padding: 6px 14px; border-radius: var(--r-pill); cursor: pointer; }
+  .seg button.on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }
+
+  .stepper { display:inline-flex; align-items:center; border:1px solid var(--border); border-radius: var(--r-pill); overflow:hidden; }
+  .stepper button { width:40px; height:40px; border:0; background:var(--surface); color:var(--primary); font-size:20px; cursor:pointer; }
+  .stepper .val { min-width:44px; text-align:center; font-weight:700; }
+
+  .help { display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--surface-2); color:var(--text-muted); font-size:11px; font-weight:700; border:1px solid var(--border); }
+  .tip { display:inline-block; background: var(--text); color: var(--surface); font-size:12px; padding:8px 11px; border-radius: var(--r-md); max-width: 220px; box-shadow: var(--shadow-md); position: relative; }
+  .tip::after { content:""; position:absolute; left:20px; bottom:-5px; width:10px; height:10px; background: var(--text); transform: rotate(45deg); }
+
+  .party-chip { display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:14px; }
+  .party-chip::before { content:""; width:10px; height:10px; border-radius:50%; }
+  .party-chip.a::before { background: var(--primary); }
+  .party-chip.b::before { background: var(--accent); }
+
+  .ptbar { height: 40px; border-radius: var(--r-md); overflow:hidden; display:flex; box-shadow: inset 0 0 0 1px var(--border); }
+  .ptbar .a { background: var(--primary); width:60%; display:flex; align-items:center; padding-left:12px; color:#fff; font-size:13px; font-weight:600; }
+  .ptbar .b { background: var(--accent); width:40%; display:flex; align-items:center; justify-content:flex-end; padding-right:12px; color:#3a2410; font-size:13px; font-weight:600; }
+
+  .callout { border:1px solid var(--border); border-radius: var(--r-lg); padding:18px 20px; box-shadow: var(--shadow-md); background: var(--surface); max-width: 300px; }
+  .callout .c-cap { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); }
+  .callout .amt { font-family: var(--font-display); font-weight:700; font-size:38px; letter-spacing:-.03em; font-variant-numeric:tabular-nums; display:inline-block; box-shadow: inset 0 -3px 0 var(--accent); padding-bottom:2px; }
+  .callout .amt small { font-size:15px; color:var(--text-muted); }
+
+  .tok { display:flex; gap:10px; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .tok .box { width:26px; height:26px; border-radius:7px; flex:none; }
+  .tok code { font-family: ui-monospace, monospace; color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="sg-head">
+      <div class="mark">C</div>
+      <div>
+        <h1>Columbine — Style Guide</h1>
+        <p>support-calculator · Colorado family-support estimator</p>
+      </div>
+    </div>
+    <p class="sg-sub">The component and token reference for the worksheet flow. Every value is a CSS custom property in <code>theme.css</code>; the light set lives in <code>:root</code> and the dark set under <code>[data-theme="dark"]</code>.</p>
+
+    <!-- PALETTE -->
+    <section>
+      <div class="sec-label">Palette · Light</div>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:var(--bg)"></div><div class="meta"><div class="nm">bg</div><div class="hex">#F7F7FB</div></div></div>
+        <div class="sw"><div class="chip" style="background:var(--surface-2)"></div><div class="meta"><div class="nm">surface-2</div><div class="hex">#EEEEF4</div></div></div>
+        <div class="sw"><div class="chip" style="background:var(--text)"></div><div class="meta"><div class="nm">text</div><div class="hex">#1C1C28</div></div></div>
+        <div class="sw"><div class="chip" style="background:var(--primary)"></div><div class="meta"><div class="nm">primary</div><div class="hex">#5B57D1</div></div></div>
+        <div class="sw"><div class="chip" style="background:var(--accent)"></div><div class="meta"><div class="nm">accent</div><div class="hex">#E0A46B</div></div></div>
+        <div class="sw"><div class="chip" style="background:var(--positive)"></div><div class="meta"><div class="nm">positive</div><div class="hex">#2F8F6B</div></div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-label">Palette · Dark</div>
+      <div class="dark-scope">
+        <div class="swatches">
+          <div class="sw"><div class="chip" style="background:#14141B"></div><div class="meta"><div class="nm">bg</div><div class="hex">#14141B</div></div></div>
+          <div class="sw"><div class="chip" style="background:#252533"></div><div class="meta"><div class="nm">surface-2</div><div class="hex">#252533</div></div></div>
+          <div class="sw"><div class="chip" style="background:#ECECF2"></div><div class="meta"><div class="nm">text</div><div class="hex">#ECECF2</div></div></div>
+          <div class="sw"><div class="chip" style="background:#8B87F0"></div><div class="meta"><div class="nm">primary</div><div class="hex">#8B87F0</div></div></div>
+          <div class="sw"><div class="chip" style="background:#E8B27E"></div><div class="meta"><div class="nm">accent</div><div class="hex">#E8B27E</div></div></div>
+          <div class="sw"><div class="chip" style="background:#4FB58C"></div><div class="meta"><div class="nm">positive</div><div class="hex">#4FB58C</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TYPE -->
+    <section>
+      <div class="sec-label">Typography · Bricolage Grotesque + Public Sans</div>
+      <div class="panel">
+        <div class="type-row"><div class="t-meta">Display / 34px / 700</div><div class="disp" style="font-size:34px;font-weight:700">Let's estimate support.</div></div>
+        <div class="type-row"><div class="t-meta">Heading / 18px / 600</div><div class="disp" style="font-size:18px;font-weight:600">Monthly income</div></div>
+        <div class="type-row"><div class="t-meta">Body / 15px / 400</div><div style="font-size:15px">Gross monthly amounts, before taxes.</div></div>
+        <div class="type-row"><div class="t-meta">Label / 13px / 600</div><div style="font-size:13px;font-weight:600">Work-related childcare</div></div>
+        <div class="type-row"><div class="t-meta">Numeral / tabular</div><div class="num" style="font-size:22px;font-weight:700">$11,300 · 42.5% · 219</div></div>
+        <div class="type-row" style="border:0"><div class="t-meta">Eyebrow / 12px / .09em</div><div style="font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-strong)">Child Support · Unified Worksheet</div></div>
+      </div>
+    </section>
+
+    <!-- FORM CONTROLS -->
+    <section>
+      <div class="sec-label">Inputs & controls</div>
+      <div class="grid cols-3">
+        <div class="panel">
+          <div class="h3">Currency input</div>
+          <div class="fieldwrap"><span class="flabel">Gross monthly income</span><div class="money"><input class="field num" value="4,800" /></div></div>
+          <div class="cap">$ prefix · right-aligned · tabular figures</div>
+        </div>
+        <div class="panel">
+          <div class="h3">Field states</div>
+          <div class="grid" style="gap:10px">
+            <input class="field" value="Default" style="width:100%;text-align:left" />
+            <input class="field focus" value="Focused" style="width:100%;text-align:left" />
+            <input class="field err" value="Error" style="width:100%;text-align:left" />
+            <input class="field dis" value="Disabled" style="width:100%;text-align:left" disabled />
+          </div>
+        </div>
+        <div class="panel">
+          <div class="h3">Error message</div>
+          <div class="fieldwrap"><span class="flabel">Overnights per year</span><input class="field err" value="400" style="width:100%" /><span class="err-msg">Enter a number between 0 and 365.</span></div>
+        </div>
+        <div class="panel">
+          <div class="h3">Segmented toggle</div>
+          <div class="seg"><button class="on">Per month</button><button>Per year</button><button>Hourly</button></div>
+          <div class="cap">Pay period · yes / no choices</div>
+        </div>
+        <div class="panel">
+          <div class="h3">Number stepper</div>
+          <div class="stepper"><button>–</button><span class="val">2</span><button>+</button></div>
+          <div class="cap">Number of children</div>
+        </div>
+        <div class="panel">
+          <div class="h3">Help affordance</div>
+          <div style="display:flex;align-items:center;gap:12px"><span class="help">?</span><span class="tip">Overnights are counted per the parenting-time schedule in your order.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUTTONS -->
+    <section>
+      <div class="sec-label">Buttons</div>
+      <div class="panel">
+        <div class="btnrow">
+          <button class="btn primary">Review full worksheet</button>
+          <button class="btn primary focus">Focused</button>
+          <button class="btn secondary">Add a parent</button>
+          <button class="btn ghost">Print / Export PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOMAIN COMPONENTS -->
+    <section>
+      <div class="sec-label">Worksheet components</div>
+      <div class="grid cols-2">
+        <div class="panel">
+          <div class="h3">Party identity</div>
+          <div class="btnrow"><span class="party-chip a">Taylor · Parent A</span><span class="party-chip b">Blake · Parent B</span></div>
+          <div class="cap">Primary = Parent A, Accent = Parent B — consistent everywhere the two are compared.</div>
+        </div>
+        <div class="panel">
+          <div class="h3">Results callout</div>
+          <div class="callout">
+            <div class="c-cap">Estimated monthly support</div>
+            <div class="amt num">$842<small>/mo</small></div>
+            <div style="color:var(--text-muted);font-size:13px;margin-top:6px"><b style="color:var(--primary)">Blake</b> pays <b style="color:var(--positive)">Taylor</b></div>
+          </div>
+        </div>
+        <div class="panel" style="grid-column:1 / -1">
+          <div class="h3">Parenting-time balance bar <span style="color:var(--accent-strong);font-weight:600">· signature element</span></div>
+          <div class="ptbar"><div class="a">Taylor</div><div class="b">Blake</div></div>
+          <div class="cap">A 0–365 overnight track split between the two parents — encodes the parenting-time multiplier at the heart of the 2026 unified worksheet.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOKENS -->
+    <section>
+      <div class="sec-label">Radius & spacing</div>
+      <div class="grid cols-2">
+        <div class="panel">
+          <div class="h3">Radius</div>
+          <div class="tok"><span class="box" style="border-radius:6px;background:var(--surface-2);border:1px solid var(--border)"></span> <code>--r-sm</code> 6px · inputs</div>
+          <div class="tok"><span class="box" style="border-radius:10px;background:var(--surface-2);border:1px solid var(--border)"></span> <code>--r-md</code> 10px · fields, buttons</div>
+          <div class="tok" style="border:0"><span class="box" style="border-radius:16px;background:var(--surface-2);border:1px solid var(--border)"></span> <code>--r-lg</code> 16px · cards</div>
+        </div>
+        <div class="panel">
+          <div class="h3">Spacing rhythm · 4px base</div>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:64px">
+            <div style="width:16px;background:var(--primary-weak)"><div style="height:4px;background:var(--primary)"></div></div>
+            <div style="width:16px;height:8px;background:var(--primary)"></div>
+            <div style="width:16px;height:12px;background:var(--primary)"></div>
+            <div style="width:16px;height:16px;background:var(--primary)"></div>
+            <div style="width:16px;height:24px;background:var(--primary)"></div>
+            <div style="width:16px;height:32px;background:var(--primary)"></div>
+            <div style="width:16px;height:48px;background:var(--primary)"></div>
+            <div style="width:16px;height:64px;background:var(--primary)"></div>
+          </div>
+          <div class="cap">4 · 8 · 12 · 16 · 24 · 32 · 48 · 64</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
