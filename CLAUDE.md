@@ -45,6 +45,15 @@ The app is a single-page React application. It is currently the **default Vite s
 
 ### TypeScript / React
 - Prefer explicit types on component props and public function signatures.
+- **Always prefer `type` aliases over `interface`s** (including for component props), unless
+  declaration merging is genuinely required.
+- **Type organization:**
+  - Shared/domain types live in a top-level `src/types/` directory, split into modules by
+    domain or use — e.g. `src/types/common.ts`, and future modules like `src/types/support.ts`
+    for calculation-domain types. Import shared types from there.
+  - **Component-only types and view models** (a component's own prop type, local view state,
+    presentational helpers) may stay in the `.tsx` module that contains the component — don't
+    push single-component types into `src/types/`.
 - Keep business logic (support calculations) separate from presentational components so it
   can be unit-tested independently.
 

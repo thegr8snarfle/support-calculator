@@ -1,113 +1,165 @@
 @import 'tailwindcss';
 
+/* ============================================================================
+   support-calculator — Columbine theme tokens
+   ----------------------------------------------------------------------------
+   Source of truth: mockups/theme.css. Raw custom properties live on :root
+   (light) and [data-theme="dark"] (dark). The `@theme inline` block below maps
+   them onto Tailwind v4 token names so utilities (bg-surface, text-muted,
+   text-primary, rounded-lg, …) resolve to the *live* variable and flip with
+   data-theme at runtime.
+   ========================================================================== */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  color-scheme: light;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* --- Neutrals / surfaces --- */
+  --bg:           #F7F7FB;
+  --surface:      #FFFFFF;
+  --surface-2:    #EEEEF4;
+  --border:       #DBDBE6;
+  --border-strong:#C3C3D4;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* --- Text --- */
+  --text:        #1C1C28;
+  --text-muted:  #5A5A6A;
+  --text-subtle: #8A8A99;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* --- Primary (columbine indigo / periwinkle) --- */
+  --primary:       #5B57D1;
+  --primary-hover: #4A46B8;
+  --primary-weak:  #ECEBFB;
+  --on-primary:    #FFFFFF;
+
+  /* --- Accent (sandstone / sunset) --- */
+  --accent:        #E0A46B;
+  --accent-weak:   #FBF0E4;
+  --accent-strong: #B4712F;
+
+  /* --- Status --- */
+  --positive:      #2F8F6B;
+  --positive-weak: #E4F2EC;
+  --alert:         #C4553B;
+  --alert-weak:    #F8E7E2;
+
+  /* --- Focus --- */
+  --focus:      rgba(91, 87, 209, .45);
+  --focus-ring: 0 0 0 3px var(--focus);
+
+  /* --- Radius --- */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* --- Spacing rhythm (4px base) --- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* --- Elevation --- */
+  --shadow-sm: 0 1px 2px rgba(28, 28, 40, .06);
+  --shadow-md: 0 4px 16px rgba(28, 28, 40, .08);
+  --shadow-lg: 0 12px 40px rgba(28, 28, 40, .12);
+
+  /* --- Type --- */
+  --font-display: "Bricolage Grotesque Variable", "Public Sans Variable", system-ui, sans-serif;
+  --font-body:    "Public Sans Variable", system-ui, -apple-system, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+[data-theme="dark"] {
+  color-scheme: dark;
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+  --bg:           #14141B;
+  --surface:      #1C1C28;
+  --surface-2:    #252533;
+  --border:       #33333F;
+  --border-strong:#454556;
+
+  --text:        #ECECF2;
+  --text-muted:  #A0A0B0;
+  --text-subtle: #6E6E80;
+
+  --primary:       #8B87F0;
+  --primary-hover: #9E9AF5;
+  --primary-weak:  #262445;
+  --on-primary:    #14141B;
+
+  --accent:        #E8B27E;
+  --accent-weak:   #2E2519;
+  --accent-strong: #E8B27E;
+
+  --positive:      #4FB58C;
+  --positive-weak: #16302A;
+  --alert:         #E07A5F;
+  --alert-weak:    #33211C;
+
+  --focus: rgba(139, 135, 240, .55);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, .45);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, .55);
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+/* --- Tailwind token mapping (inline → utilities use the live var) --- */
+@theme inline {
+  --color-bg:            var(--bg);
+  --color-surface:       var(--surface);
+  --color-surface-2:     var(--surface-2);
+  --color-border:        var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text:        var(--text);
+  --color-text-muted:  var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+
+  --color-primary:       var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-weak:  var(--primary-weak);
+  --color-on-primary:    var(--on-primary);
+
+  --color-accent:        var(--accent);
+  --color-accent-weak:   var(--accent-weak);
+  --color-accent-strong: var(--accent-strong);
+
+  --color-positive:      var(--positive);
+  --color-positive-weak: var(--positive-weak);
+  --color-alert:         var(--alert);
+  --color-alert-weak:    var(--alert-weak);
+
+  --font-display: var(--font-display);
+  --font-body:    var(--font-body);
+
+  --radius-md:   var(--r-md);
+  --radius-lg:   var(--r-lg);
+  --radius-pill: var(--r-pill);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }
 
+/* --- Base --- */
 body {
   margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
   font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  line-height: 1.5;
+  font-feature-settings: "cv05" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular figures for money, percentages, overnights. */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Shared focus ring for interactive elements. */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
