@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Card } from '../../../components/ui/Card'
 import { CurrencyInput } from '../../../components/ui/CurrencyInput'
 import { NumberInput } from '../../../components/ui/NumberInput'
@@ -7,6 +8,8 @@ import { NumberStepper } from '../../../components/ui/NumberStepper'
 import { HelpTip } from '../../../components/ui/HelpTip'
 import { ParentingTimeBar } from './ParentingTimeBar'
 import { ResultsRail } from './ResultsRail'
+import { WORKSHEET_SECTIONS } from '../sections'
+import { useStepFlow } from '../../navigation'
 
 const PARENT_A = 'Taylor'
 const PARENT_B = 'Blake'
@@ -16,6 +19,21 @@ const PARENT_B = 'Blake'
  * mockups/src/worksheet.html — every value is a static prop; no calculation.
  */
 export function WorksheetPage() {
+  const { next, pendingScroll, clearPendingScroll } = useStepFlow()
+
+  // Honor an "Edit" jump from Review: scroll the requested section into view once
+  // this page has rendered, then move focus to it and clear the request.
+  useEffect(() => {
+    if (!pendingScroll) return
+    const el = document.getElementById(pendingScroll)
+    if (el) {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+      el.focus({ preventScroll: true })
+    }
+    clearPendingScroll()
+  }, [pendingScroll, clearPendingScroll])
+
   return (
     <>
       <div className="mb-6">
@@ -35,7 +53,7 @@ export function WorksheetPage() {
         {/* LEFT: worksheet */}
         <div>
           {/* 1. Children */}
-          <Card step={1} title="Children in this case" hint="How many children is this support order for?">
+          <Card id={WORKSHEET_SECTIONS.children} step={1} title="Children in this case" hint="How many children is this support order for?">
             <div className="flex items-center gap-4">
               <NumberStepper value={2} />
               <span className="text-[13px] text-text-muted">
@@ -46,6 +64,7 @@ export function WorksheetPage() {
 
           {/* 2. Monthly income */}
           <Card
+            id={WORKSHEET_SECTIONS.income}
             step={2}
             title="Monthly income"
             hint="Gross monthly amounts, before taxes."
@@ -81,6 +100,7 @@ export function WorksheetPage() {
 
           {/* 3. Parenting time (signature) */}
           <Card
+            id={WORKSHEET_SECTIONS.parenting}
             step={3}
             title="Parenting time"
             hint="Overnights with each parent per year (out of 365)."
@@ -96,7 +116,7 @@ export function WorksheetPage() {
           </Card>
 
           {/* 4. Monthly shared costs */}
-          <Card step={4} title="Monthly shared costs" hint="Added to the obligation and split by income share.">
+          <Card id={WORKSHEET_SECTIONS.costs} step={4} title="Monthly shared costs" hint="Added to the obligation and split by income share.">
             <FieldRow label="Work-related childcare" divider={false} wide={<CurrencyInput defaultValue="780" />} />
             <FieldRow
               label="Children's health insurance"
@@ -127,6 +147,7 @@ export function WorksheetPage() {
             addOns="$1,080"
             netLabel="Blake's share, net"
             netTotal="$842"
+            onReview={next}
             citation={
               <>
                 Estimate only, using Colorado&rsquo;s unified child-support guideline (

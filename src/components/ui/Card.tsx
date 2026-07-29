@@ -10,6 +10,8 @@ export type CardProps = {
   hint?: ReactNode
   /** Optional help affordance rendered inline after the hint (e.g. <HelpTip/>). */
   help?: ReactNode
+  /** DOM id / scroll anchor. When set, the card can also receive programmatic focus. */
+  id?: string
   children?: ReactNode
   className?: string
 }
@@ -18,12 +20,16 @@ export type CardProps = {
  * Surface card with an optional numbered header. Maps to STYLEGUIDE.md's
  * "Section card" — one per guided worksheet step.
  */
-export function Card({ step, title, hint, help, children, className }: CardProps) {
+export function Card({ step, title, hint, help, id, children, className }: CardProps) {
   const hasHeader = step !== undefined || title || hint
   return (
     <section
+      id={id}
+      tabIndex={id ? -1 : undefined}
       className={cn(
         'bg-surface border border-border rounded-lg shadow-sm p-6 mb-6',
+        // scroll-margin so a scrolled-to card clears the header; no focus outline box
+        id && 'scroll-mt-6 focus:outline-none',
         className,
       )}
     >

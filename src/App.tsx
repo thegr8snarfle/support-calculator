@@ -1,13 +1,24 @@
-import { AppHeader, WorksheetPage } from './features/worksheet'
+import { AppHeader, WorksheetPage, ReviewPage } from './features/worksheet'
+import { StepFlowProvider, useStepFlow } from './features/navigation'
 
-function App() {
+/** App shell: header + the active step's page. Reads the current step from the flow. */
+function AppShell() {
+  const { current } = useStepFlow()
   return (
     <div className="min-h-svh bg-bg text-text">
       <AppHeader />
       <main className="max-w-[1240px] mx-auto p-6 lg:p-8">
-        <WorksheetPage />
+        {current === 'review' ? <ReviewPage /> : <WorksheetPage />}
       </main>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <StepFlowProvider>
+      <AppShell />
+    </StepFlowProvider>
   )
 }
 

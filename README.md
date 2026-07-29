@@ -51,8 +51,10 @@ src/
   components/
     ui/          Reusable design-system primitives (Card, Button, inputs, field rows…)
   features/
-    worksheet/   Worksheet feature — components/ (AppHeader, WorksheetPage, ResultsRail,
-                 ParentingTimeBar) and index.ts (public API)
+    worksheet/   Worksheet feature — components/ (AppHeader, WorksheetPage, ReviewPage,
+                 ResultsRail, ParentingTimeBar), sections.ts, and index.ts (public API)
+    navigation/  Guided-flow state — reducer model (stepFlow.ts) + useStepFlow() hook /
+                 StepFlowProvider driving Worksheet ⇄ Review
   types/         Shared/domain types, split by domain (e.g. common.ts)
   lib/           Small helpers (e.g. cn classname joiner)
   index.css      Tailwind import + Columbine tokens (:root / [data-theme="dark"])
@@ -88,7 +90,8 @@ updated as work lands. Snapshot:
 | Reusable UI component library | ✅ | ✅ | — |
 | Child-support worksheet (income, parenting time, shared costs) | ✅ | ✅ | ⬜ |
 | Results rail (estimate breakdown) | ✅ | ✅ | ⬜ |
-| Review step | ⬜ | ⬜ | ⬜ |
+| Review step (grouped recap, Edit links) | ⬜ | ✅ | ⬜ |
+| Guided-flow navigation (Worksheet ⇄ Review, `useStepFlow`) | — | ✅ | ✅ |
 | Detailed results / printable summary | ⬜ | ⬜ | ⬜ |
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
 | Support-calculation engine (C.R.S. §14-10-115) | ⬜ | — | ⬜ |

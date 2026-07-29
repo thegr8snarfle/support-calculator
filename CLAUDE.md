@@ -164,6 +164,18 @@ logic is based on so it can be verified.
 - The **child-support worksheet is built as a pixel-faithful static mockup** —
   presentational components taking props, hardcoded example values, a UI-only light/dark
   theme toggle. **No Colorado support-calculation logic and no state wiring exist yet.**
+- The **Review step is built as static UI** (`src/features/worksheet/components/ReviewPage.tsx`):
+  a read-only, grouped recap of the worksheet — one card per section with an Edit link, a
+  compact estimate echo, and Back / See-full-results buttons. No mockup existed for it, so
+  it was designed in the Columbine language. It reuses the worksheet's `Card` / `FieldRow` /
+  `PartyHeader` / `ParentingTimeBar`.
+- **Guided-flow navigation is wired** (`src/features/navigation/`): a custom, reducer-backed
+  `useStepFlow()` hook (Context provider at the app root) drives Worksheet ⇄ Review — the
+  header stepper chips, the rail's "Review full worksheet" button, and Review's Back / Edit
+  links all navigate; each Edit jumps back and scrolls to that worksheet section. Per-step
+  `status` is modeled as a seam for future validation, but this is **view switching only —
+  no calculation or input state yet.** "Results" (chip + "See full results") is disabled
+  until that page exists.
 - Design foundation is done: the "Columbine" theme, worksheet mockups, and style guide live
   in `mockups/` (see the Design section).
 
@@ -178,13 +190,13 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | --- | :---: | :---: | :---: |
 | Columbine design system & theme (tokens, dark mode) | ✅ | ✅ | — |
 | Reusable UI component library (`src/components/ui/`) | ✅ | ✅ | — |
-| App shell (`AppHeader`, guided-step nav, theme toggle) | ✅ | ✅ | ⬜ |
+| App shell (`AppHeader`, guided-step nav, theme toggle) | ✅ | ✅ | ✅ |
 | Child-support worksheet — children count | ✅ | ✅ | ⬜ |
 | Child-support worksheet — monthly income (both parties) | ✅ | ✅ | ⬜ |
 | Child-support worksheet — parenting time + balance bar | ✅ | ✅ | ⬜ |
 | Child-support worksheet — monthly shared costs | ✅ | ✅ | ⬜ |
 | Results rail (sticky estimate breakdown) | ✅ | ✅ | ⬜ |
-| Review step | ⬜ | ⬜ | ⬜ |
+| Review step (grouped recap, per-section Edit links) | ⬜ | ✅ | ⬜ |
 | Detailed results / printable summary | ⬜ | ⬜ | ⬜ |
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
 | Support-calculation engine (`C.R.S. §14-10-115`) | ⬜ | — | ⬜ |

@@ -21,6 +21,8 @@ export type ResultsRailProps = {
   netLabel: string
   netTotal: string
   citation: ReactNode
+  /** Advance to the Review step. */
+  onReview?: () => void
 }
 
 function Row({ label, value, valueClass }: { label: ReactNode; value: ReactNode; valueClass?: string }) {
@@ -37,7 +39,7 @@ export function ResultsRail(props: ResultsRailProps) {
   const {
     amount, period = '/mo', payer, recipient, nameA, nameB,
     combinedIncome, shareA, shareB, basicObligation, parentingAdjustment,
-    addOns, netLabel, netTotal, citation,
+    addOns, netLabel, netTotal, citation, onReview,
   } = props
 
   return (
@@ -83,7 +85,7 @@ export function ResultsRail(props: ResultsRailProps) {
         </div>
 
         <div className="grid gap-2 px-5 pb-5">
-          <Button variant="primary">Review full worksheet</Button>
+          <Button variant="primary" onClick={onReview}>Review full worksheet</Button>
           <Button variant="ghost">Print / Export PDF</Button>
         </div>
       </div>

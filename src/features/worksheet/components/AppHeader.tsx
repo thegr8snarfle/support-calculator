@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useStepFlow } from '../../navigation'
 
 type Theme = 'light' | 'dark'
-
-type Step = { label: string; active?: boolean }
-
-const steps: Step[] = [
-  { label: 'Worksheet', active: true },
-  { label: 'Review' },
-  { label: 'Results' },
-]
 
 /** Top app bar: brand, guided-flow steps, and the light/dark theme toggle. */
 export function AppHeader() {
   const [theme, setTheme] = useState<Theme>('light')
+  const { current, steps, goTo } = useStepFlow()
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -32,18 +26,39 @@ export function AppHeader() {
 
       <div className="flex-1" />
 
-      <nav className="hidden sm:flex items-center gap-2 text-[13px] text-text-subtle">
-        {steps.map((step, i) => (
-          <span key={step.label} className="flex items-center gap-2">
-            {i > 0 && <span aria-hidden="true">·</span>}
-            <span className={step.active ? 'flex items-center gap-2 text-text font-semibold' : 'flex items-center gap-2'}>
-              <span
-                className={`w-[7px] h-[7px] rounded-full ${step.active ? 'bg-primary' : 'bg-border-strong'}`}
-              />
-              {step.label}
+      <nav className="hidden sm:flex items-center gap-2 text-[13px] text-text-subtle" aria-label="Progress">
+        {steps.map((step, i) => {
+          const active = step.id === current
+          return (
+            <span key={step.id} className="flex items-center gap-2">
+              {i > 0 && <span aria-hidden="true">·</span>}
+              <button
+                type="button"
+                onClick={() => goTo(step.id)}
+                aria-current={active ? 'step' : undefined}
+                className={`focus-ring rounded-sm flex items-center gap-2 px-1 py-0.5 cursor-pointer hover:text-text ${
+                  active ? 'text-text font-semibold' : ''
+                }`}
+              >
+                <span
+                  className={`w-[7px] h-[7px] rounded-full ${active ? 'bg-primary' : 'bg-border-strong'}`}
+                />
+                {step.label}
+              </button>
             </span>
+          )
+        })}
+        {/* Results has no page yet — shown as a disabled, non-navigable step. */}
+        <span className="flex items-center gap-2">
+          <span aria-hidden="true">·</span>
+          <span
+            aria-disabled="true"
+            className="flex items-center gap-2 px-1 py-0.5 opacity-60 cursor-not-allowed"
+          >
+            <span className="w-[7px] h-[7px] rounded-full bg-border-strong" />
+            Results
           </span>
-        ))}
+        </span>
       </nav>
 
       <button
