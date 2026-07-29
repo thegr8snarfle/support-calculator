@@ -46,6 +46,21 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
 - `npm run test` — run Vitest _(pending: Vitest not installed / no `test` script yet)_
 - `rm -rf dist node_modules` — clean build output and dependencies
 
+## Configuration
+
+Build/deploy settings are **env-driven**, not hardcoded in `vite.config.ts`:
+
+- **`.env`** (committed default) / **`.env.local`** (gitignored per-machine override, via the
+  `*.local` rule) supply the vars; **`.env.template`** documents them.
+- **`config/appConfig.ts`** is the typed config layer: it exports the `AppConfig` type and a
+  pure `loadAppConfig(env)` that parses + validates env into config. This is Node/build-side
+  (root `config/`, type-checked via `tsconfig.node.json`), **not** under `src/`.
+- **`vite.config.ts`** calls `loadEnv(mode, cwd, '')` → `loadAppConfig(env)` and feeds it into
+  Vite. Today the only setting is **`APP_PORT`** (default `3000`), driving the dev + preview
+  server port. Add new settings to `AppConfig` + `loadAppConfig` and read them here.
+- `APP_PORT` is non-`VITE_`-prefixed, so it stays build-side and is **never** exposed to the
+  client bundle. (Client-visible vars would use the `VITE_` prefix.)
+
 ## Testing
 
 - **e2e (Playwright):** `e2e/*.spec.ts`, config in `playwright.config.ts`. `npm run test:e2e`

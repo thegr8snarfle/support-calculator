@@ -20,8 +20,8 @@ export default defineConfig([
     },
   },
   {
-    // Playwright config + e2e specs run in Node, not the browser.
-    files: ['playwright.config.ts', 'e2e/**/*.ts'],
+    // Build/Node-side files (not the browser): Vite + config + Playwright + e2e.
+    files: ['vite.config.ts', 'config/**/*.ts', 'playwright.config.ts', 'e2e/**/*.ts'],
     languageOptions: {
       globals: globals.node,
     },

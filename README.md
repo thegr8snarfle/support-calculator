@@ -61,11 +61,21 @@ src/
   lib/           Small helpers (e.g. cn classname joiner)
   index.css      Tailwind import + Columbine tokens (:root / [data-theme="dark"])
   main.tsx       Font imports + app bootstrap
+config/          Build/deploy config — appConfig.ts (AppConfig type + loadAppConfig)
+e2e/             Playwright smoke tests (flow.spec.ts)
 mockups/         "Columbine" design system: theme.css (token source of truth),
                  STYLEGUIDE.md, and reference PNGs rendered from mockups/src/*.html
 design_inspiration/  Reference material (legacy forms, official CO worksheet PDF)
 public/          Static assets (favicon)
+.env             Build config defaults (APP_PORT); .env.local overrides (gitignored)
 ```
+
+## Configuration
+
+Build settings are env-driven. `.env` (committed) supplies defaults — currently just
+`APP_PORT` (the dev/preview server port, default `3000`); copy `.env.template` and override
+per-machine in `.env.local` (gitignored). Values are parsed and typed by `config/appConfig.ts`
+(`AppConfig` / `loadAppConfig`) and consumed in `vite.config.ts`.
 
 ## Testing
 
