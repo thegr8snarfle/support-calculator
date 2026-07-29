@@ -1,5 +1,4 @@
-import { AppHeader } from './components/worksheet/AppHeader'
-import { WorksheetPage } from './components/worksheet/WorksheetPage'
+import { AppHeader, WorksheetPage } from './features/worksheet'
 
 function App() {
   return (

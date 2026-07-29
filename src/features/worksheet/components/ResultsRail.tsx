@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Button } from '../ui/Button'
+import { Button } from '../../../components/ui/Button'
 
 export type ResultsRailProps = {
   /** Big display amount, e.g. "$842". */
