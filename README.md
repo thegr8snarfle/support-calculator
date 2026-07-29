@@ -26,6 +26,7 @@ values). No calculation logic or state wiring is implemented yet — see the
 - **Tailwind CSS v4** (CSS-configured via `@tailwindcss/vite`; tokens mapped with
   `@theme inline`)
 - **ESLint 10** (flat config)
+- **Playwright** for e2e smoke tests
 - Self-hosted variable fonts via `@fontsource-variable` (Bricolage Grotesque + Public Sans)
 
 ## Getting started
@@ -43,6 +44,7 @@ Other scripts:
 | `npm run build` | Type-check and build (`tsc -b && vite build`) |
 | `npm run preview` | Preview the production build locally |
 | `npm run lint` | Run ESLint over the project |
+| `npm run test:e2e` | Run the Playwright e2e smoke suite (auto-starts the dev server) |
 
 ## Project structure
 
@@ -64,6 +66,14 @@ mockups/         "Columbine" design system: theme.css (token source of truth),
 design_inspiration/  Reference material (legacy forms, official CO worksheet PDF)
 public/          Static assets (favicon)
 ```
+
+## Testing
+
+A small **Playwright** e2e suite (`e2e/`) smoke-tests the guided flow — that it loads on the
+Worksheet, navigates Worksheet ⇄ Review, that Edit links jump back to their section, and that
+the not-yet-built Results step stays disabled. Run it with `npm run test:e2e`; Playwright
+starts the dev server itself and uses your installed Google Chrome (`channel: 'chrome'`).
+Unit tests (Vitest, for the calculation engine) are not set up yet.
 
 ## Design system — "Columbine"
 

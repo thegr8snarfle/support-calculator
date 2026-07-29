@@ -21,6 +21,7 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
 - **ESLint 10** (flat config in `eslint.config.js`) with `typescript-eslint`,
   `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`
 - Self-hosted variable fonts via `@fontsource-variable` (Bricolage Grotesque + Public Sans)
+- **Playwright** (`@playwright/test`) — e2e smoke tests under `e2e/` (see **Testing**)
 
 ### Intended / target stack (not yet installed — add as features need it)
 - **State:** Zustand (global UI state), TanStack Query (server state) — once the app talks
@@ -29,7 +30,8 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
   alongside the hand-built Columbine primitives; new shared atoms can follow the shadcn
   pattern. Existing Columbine primitives are custom, not shadcn.
 - **Forms & validation:** Zod + React Hook Form — for the worksheet's input/validation layer.
-- **Testing:** Vitest — for the calculation engine and component tests.
+- **Testing:** Vitest — for the calculation engine and component/unit tests (Playwright, for
+  e2e, is already installed — see **Installed now**).
 
 > Keep this list honest: when you install one of the "intended" tools, move it up to
 > **Installed now** in the same change.
@@ -40,8 +42,19 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
 - `npm run build` — type-check and build (`tsc -b && vite build`)
 - `npm run lint` — run ESLint over the project
 - `npm run preview` — preview the production build locally
+- `npm run test:e2e` — run the Playwright e2e smoke suite (auto-starts the dev server)
 - `npm run test` — run Vitest _(pending: Vitest not installed / no `test` script yet)_
 - `rm -rf dist node_modules` — clean build output and dependencies
+
+## Testing
+
+- **e2e (Playwright):** `e2e/*.spec.ts`, config in `playwright.config.ts`. `npm run test:e2e`
+  starts the dev server (port 5190) itself and drives the guided flow in a real browser.
+  It uses the **installed Google Chrome** (`channel: 'chrome'`) to avoid downloading a
+  Chromium binary; for a hermetic CI run, drop the channel and `npx playwright install chromium`.
+  Keep e2e specs a thin smoke layer (view transitions, key affordances) — not exhaustive.
+- **Unit (Vitest):** not installed yet; earmarked for the calculation engine and component
+  tests. Add it when that logic lands, then update this section and the tech-stack list.
 
 ## Conventions
 
