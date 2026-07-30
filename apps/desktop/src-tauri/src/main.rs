@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    columbine_support_desktop_lib::run()
+    cbmds_lib::run()
 }

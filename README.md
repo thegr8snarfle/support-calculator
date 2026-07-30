@@ -76,6 +76,25 @@ npm run desktop:build   # bundles apps/desktop/src-tauri/target/release/bundle/*
 > Only local **macOS** builds are set up today; Windows/CI packaging and code signing /
 > notarization are deferred (unsigned local builds show a Gatekeeper warning off-machine).
 
+#### Distributing the macOS build
+
+`npm run desktop:build` produces a shareable `.dmg` (and the `.app`) under
+`apps/desktop/src-tauri/target/release/bundle/`:
+
+- `macos/Crazy Baby Mama Defense System.app`
+- `dmg/Crazy Baby Mama Defense System_0.1.0_<arch>.dmg` — named from `productName`, `version`,
+  and the **host CPU arch** (e.g. `aarch64` on Apple Silicon). The build targets the host arch
+  only — a universal (Intel + Apple Silicon) binary is out of scope.
+
+Hand someone the `.dmg` to install (mount → drag the app to Applications). Because the build
+is **unsigned and un-notarized** (no Apple Developer ID yet), macOS Gatekeeper blocks the
+first launch on another Mac. The recipient clears it once, either way:
+
+- **Right-click** the app in Applications → **Open** → **Open** in the dialog, or
+- from Terminal: `xattr -dr com.apple.quarantine "/Applications/Crazy Baby Mama Defense System.app"`
+
+A warning-free open requires Developer ID **signing + notarization**, which is deferred.
+
 ## Project structure
 
 ```

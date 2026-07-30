@@ -65,7 +65,11 @@ Desktop (Tauri) — delegate to `@support-calculator/desktop`:
 - `npm run desktop:dev` — launch the app in a native window (starts the web dev server via
   Tauri's `beforeDevCommand`, then opens the webview with HMR)
 - `npm run desktop:build` — build the web app and bundle a macOS `.app` + `.dmg` into
-  `apps/desktop/src-tauri/target/release/bundle/`.
+  `apps/desktop/src-tauri/target/release/bundle/` (`macos/*.app`, `dmg/*.dmg`). The `.dmg` is
+  the shareable distributable, built for the **host CPU arch only**; since it's **unsigned /
+  un-notarized**, a first launch on another Mac needs the Gatekeeper workaround (right-click →
+  Open, or `xattr -dr com.apple.quarantine <app>`). See README → _Distributing the macOS
+  build_.
 
 The two `desktop` scripts are `. "$HOME/.cargo/env" 2>/dev/null; tauri dev|build` (and `build`
 additionally sets `CI=true`). Why each piece:
