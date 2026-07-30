@@ -15,11 +15,15 @@ export function AppHeader() {
   return (
     <header className="flex items-center gap-4 px-6 py-4 bg-surface border-b border-border">
       <div className="flex items-center gap-3">
-        <div className="grid place-items-center w-[30px] h-[30px] rounded-[9px] bg-linear-[150deg,var(--primary),var(--accent)] text-white font-display font-bold shadow-sm">
-          C
-        </div>
+        <img
+          src="/favicon.svg"
+          alt=""
+          width={30}
+          height={30}
+          loading="lazy"
+          className="w-[30px] h-[30px]"
+        />
         <div className="text-[15px]">
-          <b className="font-display font-bold tracking-[-0.01em]">Columbine</b>{' '}
           <span className="text-text-muted text-[13px]">Colorado Support Estimator</span>
         </div>
       </div>
@@ -58,7 +62,7 @@ export function AppHeader() {
       >
         <span className="w-[11px] h-[11px] rounded-full bg-primary" />
         <span className="w-[11px] h-[11px] rounded-full bg-accent -ml-1" />
-        Columbine
+        Theme
       </button>
     </header>
   )
