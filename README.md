@@ -1,7 +1,11 @@
-# support-calculator
+<p style="text-align: center">
+  <img src="./mockups/img.png">
+</p>
+
+# Crazy Baby Mama Defense System
 
 A web app for estimating **family support in the State of Colorado** — child support
-and spousal maintenance (alimony) — for both self-represented (pro se) parties and
+and spousal maintenance (alimony) — for "both" self-represented (pro se) parties and
 family-law practitioners.
 
 The goal is a modern, guided, "TaxCaster-like" experience: one thing at a time, generous
@@ -14,7 +18,7 @@ trust the math.
 
 ## Status
 
-Early development. The **Columbine design system** and the **child-support worksheet**
+Early development. The **design system** and the **child-support worksheet**
 exist as a pixel-faithful, static UI (presentational components with hardcoded example
 values). No calculation logic or state wiring is implemented yet — see the
 [Roadmap](#roadmap).
