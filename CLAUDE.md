@@ -197,13 +197,24 @@ logic is based on so it can be verified.
   compact estimate echo, and Back / See-full-results buttons. No mockup existed for it, so
   it was designed in the Columbine language. It reuses the worksheet's `Card` / `FieldRow` /
   `PartyHeader` / `ParentingTimeBar`.
+- The **Results step is built as static UI** (`src/features/worksheet/components/ResultsPage.tsx`):
+  a standalone, printable summary — hero estimate, an expanded "how this was calculated"
+  breakdown (reusing the results-rail vocabulary), and a read-only recap of every input. No
+  mockup existed, so it was designed in the Columbine language. The Review and Results recaps
+  share one `WorksheetRecap` component; the read-only `RecapCard` / `RecapValue` primitives
+  live in `src/components/ui/`. The "Print / Export PDF" button is presentational for now.
+- **Shared static data lives in `src/mocks/`** — a typed mock-fixture repository
+  (`SAMPLE_WORKSHEET` / `SAMPLE_ESTIMATE`) that the worksheet, review, and results all read
+  from, so their numbers can't drift. It's shaped as domain-ish objects of plain numbers
+  (formatting via `src/lib/format.ts`) so the future calculation engine and its unit tests
+  can consume the same fixtures.
 - **Guided-flow navigation is wired** (`src/features/navigation/`): a custom, reducer-backed
-  `useStepFlow()` hook (Context provider at the app root) drives Worksheet ⇄ Review — the
+  `useStepFlow()` hook (Context provider at the app root) drives Worksheet → Review → Results — the
   header stepper chips, the rail's "Review full worksheet" button, and Review's Back / Edit
   links all navigate; each Edit jumps back and scrolls to that worksheet section. Per-step
   `status` is modeled as a seam for future validation, but this is **view switching only —
-  no calculation or input state yet.** "Results" (chip + "See full results") is disabled
-  until that page exists.
+  no calculation or input state yet.** All three chips are now live; Review's "See full
+  results" advances to the Results step.
 - Design foundation is done: the "Columbine" theme, worksheet mockups, and style guide live
   in `mockups/` (see the Design section).
 
@@ -225,7 +236,7 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Child-support worksheet — monthly shared costs | ✅ | ✅ | ⬜ |
 | Results rail (sticky estimate breakdown) | ✅ | ✅ | ⬜ |
 | Review step (grouped recap, per-section Edit links) | ⬜ | ✅ | ⬜ |
-| Detailed results / printable summary | ⬜ | ⬜ | ⬜ |
+| Detailed results / printable summary (Results step) | ⬜ | ✅ | ⬜ |
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
 | Support-calculation engine (`C.R.S. §14-10-115`) | ⬜ | — | ⬜ |
 | State wiring / live-updating estimate | ⬜ | ⬜ | ⬜ |

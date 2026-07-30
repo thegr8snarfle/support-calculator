@@ -54,11 +54,14 @@ src/
     ui/          Reusable design-system primitives (Card, Button, inputs, field rows…)
   features/
     worksheet/   Worksheet feature — components/ (AppHeader, WorksheetPage, ReviewPage,
-                 ResultsRail, ParentingTimeBar), sections.ts, and index.ts (public API)
+                 ResultsPage, ResultsRail, WorksheetRecap, ParentingTimeBar,
+                 SupportCitation), sections.ts, and index.ts (public API)
     navigation/  Guided-flow state — reducer model (stepFlow.ts) + useStepFlow() hook /
-                 StepFlowProvider driving Worksheet ⇄ Review
+                 StepFlowProvider driving Worksheet → Review → Results
   types/         Shared/domain types, split by domain (e.g. common.ts)
-  lib/           Small helpers (e.g. cn classname joiner)
+  mocks/         Mock-fixture repository (SAMPLE_WORKSHEET / SAMPLE_ESTIMATE) — the shared
+                 static example data, and future unit-test fixtures
+  lib/           Small helpers (e.g. cn classname joiner, format.ts currency helpers)
   index.css      Tailwind import + Columbine tokens (:root / [data-theme="dark"])
   main.tsx       Font imports + app bootstrap
 config/          Build/deploy config — appConfig.ts (AppConfig type + loadAppConfig)
@@ -80,8 +83,8 @@ per-machine in `.env.local` (gitignored). Values are parsed and typed by `config
 ## Testing
 
 A small **Playwright** e2e suite (`e2e/`) smoke-tests the guided flow — that it loads on the
-Worksheet, navigates Worksheet ⇄ Review, that Edit links jump back to their section, and that
-the not-yet-built Results step stays disabled. Run it with `npm run test:e2e`; Playwright
+Worksheet, navigates Worksheet → Review → Results, that Edit links jump back to their section,
+and that the stepper chips switch views. Run it with `npm run test:e2e`; Playwright
 starts the dev server itself and uses your installed Google Chrome (`channel: 'chrome'`).
 Unit tests (Vitest, for the calculation engine) are not set up yet.
 
@@ -111,8 +114,8 @@ updated as work lands. Snapshot:
 | Child-support worksheet (income, parenting time, shared costs) | ✅ | ✅ | ⬜ |
 | Results rail (estimate breakdown) | ✅ | ✅ | ⬜ |
 | Review step (grouped recap, Edit links) | ⬜ | ✅ | ⬜ |
-| Guided-flow navigation (Worksheet ⇄ Review, `useStepFlow`) | — | ✅ | ✅ |
-| Detailed results / printable summary | ⬜ | ⬜ | ⬜ |
+| Guided-flow navigation (Worksheet → Review → Results, `useStepFlow`) | — | ✅ | ✅ |
+| Detailed results / printable summary (Results step) | ⬜ | ✅ | ⬜ |
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
 | Support-calculation engine (C.R.S. §14-10-115) | ⬜ | — | ⬜ |
 | State wiring / live-updating estimate | ⬜ | ⬜ | ⬜ |

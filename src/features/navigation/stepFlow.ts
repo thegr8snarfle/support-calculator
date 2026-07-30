@@ -5,11 +5,11 @@
  * `status`) belong here, not in the components.
  */
 
-/** A step in the guided flow. Add 'results' here once that page exists. */
-export type Step = 'worksheet' | 'review'
+/** A step in the guided flow. */
+export type Step = 'worksheet' | 'review' | 'results'
 
 /** Order the flow advances in; drives `next` / `back`. */
-export const STEP_ORDER: Step[] = ['worksheet', 'review']
+export const STEP_ORDER: Step[] = ['worksheet', 'review', 'results']
 
 /**
  * Per-step validation / completion state. A deliberate seam: today every step is
@@ -37,6 +37,7 @@ export const initialStepFlow: StepFlowState = {
   steps: {
     worksheet: { id: 'worksheet', label: 'Worksheet', status: 'incomplete' },
     review: { id: 'review', label: 'Review', status: 'incomplete' },
+    results: { id: 'results', label: 'Results', status: 'incomplete' },
   },
   pendingScroll: null,
 }

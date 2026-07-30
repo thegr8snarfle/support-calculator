@@ -1,4 +1,4 @@
-import { AppHeader, WorksheetPage, ReviewPage } from './features/worksheet'
+import { AppHeader, WorksheetPage, ReviewPage, ResultsPage } from './features/worksheet'
 import { StepFlowProvider, useStepFlow } from './features/navigation'
 
 /** App shell: header + the active step's page. Reads the current step from the flow. */
@@ -8,7 +8,13 @@ function AppShell() {
     <div className="min-h-svh bg-bg text-text">
       <AppHeader />
       <main className="max-w-[1240px] mx-auto p-6 lg:p-8">
-        {current === 'review' ? <ReviewPage /> : <WorksheetPage />}
+        {current === 'review' ? (
+          <ReviewPage />
+        ) : current === 'results' ? (
+          <ResultsPage />
+        ) : (
+          <WorksheetPage />
+        )}
       </main>
     </div>
   )

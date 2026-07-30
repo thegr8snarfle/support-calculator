@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * Smoke tests for the Worksheet ⇄ Review guided flow. These drive the app as a user
- * would and assert the view transitions — not exhaustive coverage.
+ * Smoke tests for the Worksheet → Review → Results guided flow. These drive the app as a
+ * user would and assert the view transitions — not exhaustive coverage.
  */
 
 const worksheetHeading = /estimate monthly support/i
 const reviewHeading = /Review your worksheet/i
+const resultsHeading = /your estimated support/i
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -45,9 +46,16 @@ test('the stepper chips switch views', async ({ page }) => {
   await expect(page.getByRole('heading', { name: worksheetHeading })).toBeVisible()
 })
 
-test('the Results step is not navigable yet', async ({ page }) => {
+test('navigates Review → Results', async ({ page }) => {
   await page.getByRole('button', { name: 'Review full worksheet' }).click()
+  await page.getByRole('button', { name: 'See full results' }).click()
 
-  await expect(page.getByRole('button', { name: 'See full results' })).toBeDisabled()
-  await expect(page.locator('nav [aria-disabled="true"]')).toContainText('Results')
+  await expect(page.getByRole('heading', { name: resultsHeading })).toBeVisible()
+  await expect(page.locator('[aria-current="step"]')).toHaveText('Results')
+
+  // The Results header chip is now a real, navigable step.
+  await page.getByRole('button', { name: 'Worksheet', exact: true }).click()
+  await expect(page.getByRole('heading', { name: worksheetHeading })).toBeVisible()
+  await page.getByRole('button', { name: 'Results', exact: true }).click()
+  await expect(page.getByRole('heading', { name: resultsHeading })).toBeVisible()
 })

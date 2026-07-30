@@ -8,11 +8,15 @@ import { NumberStepper } from '../../../components/ui/NumberStepper'
 import { HelpTip } from '../../../components/ui/HelpTip'
 import { ParentingTimeBar } from './ParentingTimeBar'
 import { ResultsRail } from './ResultsRail'
+import { SupportCitation } from './SupportCitation'
 import { WORKSHEET_SECTIONS } from '../sections'
 import { useStepFlow } from '../../navigation'
+import { SAMPLE_WORKSHEET, SAMPLE_ESTIMATE } from '../../../mocks'
+import { formatUsd } from '../../../lib/format'
 
-const PARENT_A = 'Taylor'
-const PARENT_B = 'Blake'
+const { parties } = SAMPLE_WORKSHEET
+const PARENT_A = parties.a.name
+const PARENT_B = parties.b.name
 
 /**
  * The Colorado child-support worksheet. Presentational reproduction of
@@ -134,27 +138,21 @@ export function WorksheetPage() {
         {/* RIGHT: results rail */}
         <aside className="lg:sticky lg:top-6">
           <ResultsRail
-            amount="$842"
-            payer={PARENT_B}
-            recipient={PARENT_A}
+            amount={formatUsd(SAMPLE_ESTIMATE.amount)}
+            payer={parties[SAMPLE_ESTIMATE.payer].name}
+            recipient={parties[SAMPLE_ESTIMATE.recipient].name}
             nameA={PARENT_A}
             nameB={PARENT_B}
-            combinedIncome="$11,300"
-            shareA={42.5}
-            shareB={57.5}
-            basicObligation="$1,986"
-            parentingAdjustment="−$612"
-            addOns="$1,080"
-            netLabel="Blake's share, net"
-            netTotal="$842"
+            combinedIncome={formatUsd(SAMPLE_ESTIMATE.combinedIncome)}
+            shareA={SAMPLE_ESTIMATE.shareA}
+            shareB={SAMPLE_ESTIMATE.shareB}
+            basicObligation={formatUsd(SAMPLE_ESTIMATE.basicObligation)}
+            parentingAdjustment={formatUsd(SAMPLE_ESTIMATE.parentingAdjustment)}
+            addOns={formatUsd(SAMPLE_ESTIMATE.addOns)}
+            netLabel={`${parties[SAMPLE_ESTIMATE.payer].name}'s share, net`}
+            netTotal={formatUsd(SAMPLE_ESTIMATE.netTotal)}
             onReview={next}
-            citation={
-              <>
-                Estimate only, using Colorado&rsquo;s unified child-support guideline (
-                <code className="text-text-muted">C.R.S. §14-10-115</code>, schedule effective
-                March 1, 2026). Courts may deviate. Not legal advice.
-              </>
-            }
+            citation={<SupportCitation />}
           />
         </aside>
       </div>

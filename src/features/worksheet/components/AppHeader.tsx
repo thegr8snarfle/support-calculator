@@ -48,17 +48,6 @@ export function AppHeader() {
             </span>
           )
         })}
-        {/* Results has no page yet — shown as a disabled, non-navigable step. */}
-        <span className="flex items-center gap-2">
-          <span aria-hidden="true">·</span>
-          <span
-            aria-disabled="true"
-            className="flex items-center gap-2 px-1 py-0.5 opacity-60 cursor-not-allowed"
-          >
-            <span className="w-[7px] h-[7px] rounded-full bg-border-strong" />
-            Results
-          </span>
-        </span>
       </nav>
 
       <button
