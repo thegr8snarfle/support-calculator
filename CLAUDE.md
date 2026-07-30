@@ -13,6 +13,12 @@ The app is a single-page React application. The design system and a static child
 worksheet are built; calculation logic and state wiring are not yet in place (see
 **Current status** and the **Feature roadmap**).
 
+> **Monorepo (npm workspaces).** The repo is a two-package monorepo: the React web app
+> lives in **`apps/web/`** and a **Tauri** desktop harness in **`apps/desktop/`**; `mockups/`
+> and repo docs stay at the root. **Unless noted, every web-app path in this document
+> (`src/…`, `config/…`, `vite.config.ts`, `eslint.config.js`, `e2e/…`) is relative to
+> `apps/web/`.** See **Monorepo layout & desktop app** below.
+
 ### Installed now
 - **React 19.2** (`react` / `react-dom`)
 - **TypeScript ~6** (strict, project-references via `tsconfig.app.json` / `tsconfig.node.json`)
@@ -22,6 +28,12 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
   `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`
 - Self-hosted variable fonts via `@fontsource-variable` (Bricolage Grotesque + Public Sans)
 - **Playwright** (`@playwright/test`) — e2e smoke tests under `e2e/` (see **Testing**)
+- **npm workspaces** — the repo root is a private workspace root (`workspaces: ["apps/*"]`)
+  with one lockfile; `apps/web` = `@support-calculator/web`, `apps/desktop` =
+  `@support-calculator/desktop`.
+- **Tauri v2** (`@tauri-apps/cli`) — the `apps/desktop` harness that wraps the built web app
+  as a native desktop app. Requires the **Rust toolchain** to build (see **Monorepo layout &
+  desktop app**).
 
 ### Intended / target stack (not yet installed — add as features need it)
 - **State:** Zustand (global UI state), TanStack Query (server state) — once the app talks
@@ -38,13 +50,75 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
 
 ## Commands
 
+Run these **from the repo root** — the root `package.json` delegates each to the
+`@support-calculator/web` workspace via `npm run <script> -w @support-calculator/web`:
+
 - `npm run dev` — start the Vite dev server with HMR
 - `npm run build` — type-check and build (`tsc -b && vite build`)
 - `npm run lint` — run ESLint over the project
 - `npm run preview` — preview the production build locally
 - `npm run test:e2e` — run the Playwright e2e smoke suite (auto-starts the dev server)
 - `npm run test` — run Vitest _(pending: Vitest not installed / no `test` script yet)_
-- `rm -rf dist node_modules` — clean build output and dependencies
+
+Desktop (Tauri) — delegate to `@support-calculator/desktop`:
+
+- `npm run desktop:dev` — launch the app in a native window (starts the web dev server via
+  Tauri's `beforeDevCommand`, then opens the webview with HMR)
+- `npm run desktop:build` — build the web app and bundle a macOS `.app` + `.dmg` into
+  `apps/desktop/src-tauri/target/release/bundle/`.
+
+The two `desktop` scripts are `. "$HOME/.cargo/env" 2>/dev/null; tauri dev|build` (and `build`
+additionally sets `CI=true`). Why each piece:
+
+- **`. "$HOME/.cargo/env"`** — puts `~/.cargo/bin` on PATH so `tauri` can find `cargo`, even
+  when the invoking terminal never sourced the rustup profile (a shell opened before Rust was
+  installed, a minimal `sh`, etc.). It's silenced + non-fatal (`2>/dev/null;` not `&&`), so if
+  Rust lives elsewhere the script still falls back to the ambient PATH. Without this you get
+  `failed to run 'cargo metadata' … No such file or directory (os error 2)`.
+- **`CI=true`** (build only) — makes Tauri's `create-dmg` **skip the Finder/AppleScript
+  window-styling step**, which otherwise fails in any non-GUI / automation-restricted context
+  (background shells, SSH, CI). The DMG is produced without a custom window layout — fine
+  since no DMG background is configured.
+
+(Both are POSIX-shell syntax; a future Windows build would express them differently.)
+
+Housekeeping:
+
+- `npm install` (at root) — installs all workspaces into the single root `node_modules`
+- `rm -rf apps/web/dist node_modules apps/desktop/src-tauri/target` — clean build output +
+  dependencies
+
+## Monorepo layout & desktop app
+
+The repo is an **npm-workspaces monorepo**:
+
+```
+support-calculator/          workspace root (private; workspaces: ["apps/*"]; one lockfile)
+  apps/
+    web/                     @support-calculator/web — the React app (all src/, config/, e2e/…)
+    desktop/                 @support-calculator/desktop — Tauri v2 harness
+      src-tauri/             Cargo project: tauri.conf.json, src/{main,lib}.rs, capabilities/, icons/
+  mockups/                   shared Columbine design system / refs (root-level)
+  CLAUDE.md  README.md       repo docs (root-level)
+```
+
+**Desktop app (Tauri v2).** `apps/desktop` wraps the built web app in the OS-native webview
+(WKWebView / WebView2) — tiny installers, no bundled Chromium. It writes **near-zero Rust**:
+`src/main.rs`/`lib.rs` are the default entry points; all wiring is in
+`apps/desktop/src-tauri/tauri.conf.json`:
+
+- `beforeDevCommand` / `beforeBuildCommand` = `cd ../web && npm run dev|build` (they run from
+  `apps/desktop`), and `frontendDist` = `../../web/dist` (relative to `tauri.conf.json`).
+- **`devUrl` (`http://localhost:3000`) must match `APP_PORT`.** Keep the default `3000`; if a
+  machine overrides `APP_PORT` in `apps/web/.env.local`, update `devUrl` to match.
+- A **strict CSP** is set (`default-src 'self'` + inline styles, `data:` images, self fonts) —
+  the app self-hosts fonts and makes no network calls. Loosen only if a real asset is blocked.
+
+**Prerequisite:** building the desktop app needs the **Rust toolchain** (`rustc`/`cargo` via
+[rustup](https://rustup.rs)) and, on macOS, the Xcode Command Line Tools. The web workspace
+needs neither. **Scope today: local macOS build only** — Windows/CI packaging and code
+signing / notarization are deferred (unsigned local builds trigger a Gatekeeper warning
+off-machine).
 
 ## Configuration
 
@@ -54,7 +128,7 @@ Build/deploy settings are **env-driven**, not hardcoded in `vite.config.ts`:
   `*.local` rule) supply the vars; **`.env.template`** documents them.
 - **`config/appConfig.ts`** is the typed config layer: it exports the `AppConfig` type and a
   pure `loadAppConfig(env)` that parses + validates env into config. This is Node/build-side
-  (root `config/`, type-checked via `tsconfig.node.json`), **not** under `src/`.
+  (`apps/web/config/`, type-checked via `tsconfig.node.json`), **not** under `src/`.
 - **`vite.config.ts`** calls `loadEnv(mode, cwd, '')` → `loadAppConfig(env)` and feeds it into
   Vite. Today the only setting is **`APP_PORT`** (default `3000`), driving the dev + preview
   server port. Add new settings to `AppConfig` + `loadAppConfig` and read them here.
@@ -185,6 +259,12 @@ logic is based on so it can be verified.
 
 ## Current status
 
+- **The repo is now an npm-workspaces monorepo:** the web app moved verbatim to `apps/web`
+  (`@support-calculator/web`) and a **Tauri v2 desktop harness** was added at `apps/desktop`
+  (`@support-calculator/desktop`). The desktop app wraps the built web app in the OS-native
+  webview; `desktop:dev` / `desktop:build` are wired. **Local macOS build only** — Windows/CI
+  packaging and signing are deferred, and building requires the Rust toolchain. See
+  **Monorepo layout & desktop app**.
 - **Tailwind v4 is installed** and CSS-configured (`@tailwindcss/vite`, no config files);
   Columbine tokens live in `src/index.css` and are exposed to utilities via `@theme inline`.
 - The Vite starter has been **replaced**: `src/App.tsx` renders the app shell (`AppHeader`
@@ -240,6 +320,7 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
 | Support-calculation engine (`C.R.S. §14-10-115`) | ⬜ | — | ⬜ |
 | State wiring / live-updating estimate | ⬜ | ⬜ | ⬜ |
+| Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
 
 When you complete a stage, flip the cell to ✅ (or 🎨 when only a mockup is added), add a
 row for any new feature, and cite the statute/guideline for anything under **Logic**.

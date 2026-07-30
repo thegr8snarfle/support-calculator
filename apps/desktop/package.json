@@ -1,0 +1,14 @@
+{
+  "name": "@support-calculator/desktop",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Tauri desktop harness for the Crazy Baby Mama Defense System web app.",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri dev",
+    "build": ". \"$HOME/.cargo/env\" 2>/dev/null; CI=true tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

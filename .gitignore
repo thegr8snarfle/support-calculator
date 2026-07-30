@@ -12,10 +12,14 @@ dist
 dist-ssr
 *.local
 
-# Playwright
-/test-results/
-/playwright-report/
-/playwright/.cache/
+# Playwright (unanchored — the web app now lives under apps/web/)
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Tauri / Rust build output + generated schemas (apps/desktop)
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/schemas/
 
 # Editor directories and files
 .vscode/*
@@ -27,4 +31,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-/.env
+
+# Local env files (now under apps/web/); .env.template is the tracked reference
+.env
