@@ -57,6 +57,8 @@ Other scripts:
 | `npm run test:e2e` | Run the Playwright e2e smoke suite (auto-starts the dev server) |
 | `npm run desktop:dev` | Launch the app in a native desktop window (Tauri) |
 | `npm run desktop:build` | Build + bundle the macOS desktop app (`.app` / `.dmg`) |
+| `npm run ios:dev` | Build + launch the app in the iOS Simulator (Tauri) |
+| `npm run ios:build` | Build a signed App Store IPA (requires an Apple Developer account) |
 
 ### Run as a desktop app
 
@@ -99,6 +101,43 @@ first launch on another Mac. The recipient clears it once, either way:
 
 A warning-free open requires Developer ID **signing + notarization**, which is deferred.
 
+### Run on iOS
+
+The same Tauri harness targets iOS — the built web app runs in a native `WKWebView`.
+
+**Prerequisites (macOS only):**
+
+- **Xcode** (the full app, not just Command Line Tools)
+- **CocoaPods** — `brew install cocoapods`
+- iOS Rust targets — `rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios`
+
+```bash
+npm run ios:dev     # compiles the Rust lib, boots the iOS Simulator, launches the app (HMR)
+```
+
+The Xcode project is generated (once) by `npx tauri ios init` and lives, tracked in git, at
+`apps/desktop/src-tauri/gen/apple/` — it must sit inside the Tauri project because it links by
+relative path to the Rust lib and the web `dist/`. Its own `.gitignore` excludes build output.
+To run on a **physical device** later, the dev server must bind to `TAURI_DEV_HOST` — already
+wired in `apps/web/vite.config.ts`, so `tauri ios dev` on a networked device works with no
+further change (device dev also needs an Apple signing team; see below).
+
+#### Distributing to the App Store (deferred — scaffolded, not yet active)
+
+Everything for an App Store build is in place but **dormant** until there's a **paid Apple
+Developer Program** membership and credentials. No secrets are committed — all are read from
+the environment.
+
+1. Set your **Team ID**: `export APPLE_DEVELOPMENT_TEAM=XXXXXXXXXX` (overrides
+   `tauri.conf.json > bundle > iOS > developmentTeam`, keeping it out of git).
+2. Build the IPA: `npm run ios:build` → `tauri ios build --export-method app-store-connect`,
+   which emits `apps/desktop/src-tauri/gen/apple/build/arm64/<AppName>.ipa`.
+3. Upload via **fastlane** (`apps/desktop/src-tauri/gen/apple/fastlane/`): `fastlane beta`
+   (TestFlight) or `fastlane release` (App Store). Both build then upload using an **App Store
+   Connect API key** supplied through env vars: `APP_STORE_CONNECT_API_KEY_ID`,
+   `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY` (path to `AuthKey_*.p8`), plus
+   `FASTLANE_APPLE_ID`. Without those set, the lanes are inert.
+
 ## Project structure
 
 ```
@@ -124,8 +163,9 @@ apps/
     e2e/         Playwright smoke tests (flow.spec.ts)
     public/      Static assets (favicon)
     .env         Build config defaults (APP_PORT); .env.local overrides (gitignored)
-  desktop/       @support-calculator/desktop — Tauri v2 desktop harness
+  desktop/       @support-calculator/desktop — Tauri v2 desktop + iOS harness
     src-tauri/   Cargo project: tauri.conf.json, src/{main,lib}.rs, capabilities/, icons/
+      gen/apple/ Generated iOS Xcode project (tauri ios init) + fastlane/ (App Store lanes)
 mockups/         "Columbine" design system: theme.css (token source of truth),
                  STYLEGUIDE.md, and reference PNGs rendered from mockups/src/*.html
 ```
@@ -179,6 +219,8 @@ updated as work lands. Snapshot:
 | Support-calculation engine (C.R.S. §14-10-115) | ⬜ | — | ⬜ |
 | State wiring / live-updating estimate | ⬜ | ⬜ | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
+| Mobile app (Tauri iOS, `apps/desktop`) — simulator build | — | — | ✅ |
+| iOS App Store distribution (fastlane, signing) | — | — | ⬜ |
 
 ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 

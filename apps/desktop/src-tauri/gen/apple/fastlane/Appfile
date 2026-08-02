@@ -1,0 +1,8 @@
+# fastlane Appfile — identity for App Store Connect uploads of the iOS app.
+#
+# DORMANT scaffolding: no secrets are committed. Every value comes from the
+# environment so credentials stay out of git. See fastlane/Fastfile for the
+# full list of variables and the lanes that use them.
+app_identifier("com.cbmds.support-calculator")   # must match tauri.conf.json > identifier
+apple_id(ENV["FASTLANE_APPLE_ID"])               # Apple ID email (App Store Connect login)
+team_id(ENV["APPLE_DEVELOPMENT_TEAM"])           # 10-char Apple Developer Team ID

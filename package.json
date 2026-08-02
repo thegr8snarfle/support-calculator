@@ -13,6 +13,8 @@
     "lint": "npm run lint -w @support-calculator/web",
     "test:e2e": "npm run test:e2e -w @support-calculator/web",
     "desktop:dev": "npm run dev -w @support-calculator/desktop",
-    "desktop:build": "npm run build -w @support-calculator/desktop"
+    "desktop:build": "npm run build -w @support-calculator/desktop",
+    "ios:dev": "npm run ios:dev -w @support-calculator/desktop",
+    "ios:build": "npm run ios:build -w @support-calculator/desktop"
   }
 }

@@ -6,7 +6,9 @@
   "scripts": {
     "tauri": "tauri",
     "dev": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri dev",
-    "build": ". \"$HOME/.cargo/env\" 2>/dev/null; CI=true tauri build"
+    "build": ". \"$HOME/.cargo/env\" 2>/dev/null; CI=true tauri build",
+    "ios:dev": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri ios dev",
+    "ios:build": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri ios build --export-method app-store-connect"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

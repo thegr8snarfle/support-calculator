@@ -1,0 +1,69 @@
+# fastlane Fastfile — TestFlight / App Store lanes for the Tauri iOS app.
+#
+# DORMANT until credentials exist. Requires a paid Apple Developer Program
+# membership and an App Store Connect API key. No secrets are committed — every
+# credential is read from the environment:
+#
+#   APPLE_DEVELOPMENT_TEAM        10-char Team ID (also consumed by `tauri ios build`)
+#   APP_STORE_CONNECT_API_KEY_ID  App Store Connect API key ID
+#   APP_STORE_CONNECT_ISSUER_ID   App Store Connect API issuer ID
+#   APP_STORE_CONNECT_API_KEY     path to the AuthKey_<id>.p8 file
+#   FASTLANE_APPLE_ID             Apple ID email (see Appfile)
+#
+# The IPA is produced by Tauri (not fastlane `gym`): the `build` lane runs
+# `npm run ios:build` → `tauri ios build --export-method app-store-connect`,
+# which emits gen/apple/build/arm64/<AppName>.ipa. The upload lanes then hand
+# that IPA to pilot (TestFlight) / deliver (App Store).
+#
+# Usage once credentials are set:  fastlane beta   |   fastlane release
+
+default_platform(:ios)
+
+# fastlane runs with an unspecified working directory, so resolve everything
+# from this file's location. From gen/apple/fastlane, six levels up is the repo root.
+REPO_ROOT = File.expand_path("../../../../../..", __dir__)
+IPA_GLOB  = File.expand_path("../build/arm64/*.ipa", __dir__)
+
+def latest_ipa
+  ipa = Dir.glob(IPA_GLOB).max_by { |f| File.mtime(f) }
+  UI.user_error!("No IPA found at #{IPA_GLOB} — run the `build` lane first") unless ipa
+  ipa
+end
+
+def connect_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+    issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+    key_filepath: ENV.fetch("APP_STORE_CONNECT_API_KEY"),
+  )
+end
+
+platform :ios do
+  desc "Build a signed App Store IPA via Tauri"
+  lane :build do
+    sh("cd #{REPO_ROOT.shellescape} && npm run ios:build")
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    build
+    pilot(
+      api_key: connect_api_key,
+      ipa: latest_ipa,
+      skip_waiting_for_build_processing: true,
+    )
+  end
+
+  desc "Build and submit to App Store Connect (does not auto-submit for review)"
+  lane :release do
+    build
+    deliver(
+      api_key: connect_api_key,
+      ipa: latest_ipa,
+      submit_for_review: false,
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: false,
+    )
+  end
+end

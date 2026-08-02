@@ -71,6 +71,21 @@ Desktop (Tauri) — delegate to `@support-calculator/desktop`:
   Open, or `xattr -dr com.apple.quarantine <app>`). See README → _Distributing the macOS
   build_.
 
+iOS (Tauri) — same harness, delegate to `@support-calculator/desktop`:
+
+- `npm run ios:dev` — compile the Rust lib, boot the **iOS Simulator**, and launch the app
+  (starts the web dev server via Tauri; HMR). No Apple account/signing needed for the
+  simulator. **Prerequisites:** full **Xcode** + an **iOS Simulator runtime** (install once
+  with `xcodebuild -downloadPlatform iOS`), **CocoaPods** (`brew install cocoapods`), and the
+  iOS Rust targets (`rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios`).
+- `npm run ios:build` — `tauri ios build --export-method app-store-connect` → a signed IPA at
+  `apps/desktop/src-tauri/gen/apple/build/arm64/<AppName>.ipa`. **Requires** a paid Apple
+  Developer account + a signing team (`APPLE_DEVELOPMENT_TEAM` env or `bundle > iOS >
+  developmentTeam`). **App Store distribution is scaffolded but deferred** — fastlane lanes
+  live in `apps/desktop/src-tauri/gen/apple/fastlane/` (`beta` = TestFlight, `release` = App
+  Store), all credentials env-driven so nothing secret is committed. See README → _Run on
+  iOS_.
+
 The two `desktop` scripts are `. "$HOME/.cargo/env" 2>/dev/null; tauri dev|build` (and `build`
 additionally sets `CI=true`). Why each piece:
 
@@ -100,8 +115,9 @@ The repo is an **npm-workspaces monorepo**:
 support-calculator/          workspace root (private; workspaces: ["apps/*"]; one lockfile)
   apps/
     web/                     @support-calculator/web — the React app (all src/, config/, e2e/…)
-    desktop/                 @support-calculator/desktop — Tauri v2 harness
+    desktop/                 @support-calculator/desktop — Tauri v2 harness (desktop + iOS)
       src-tauri/             Cargo project: tauri.conf.json, src/{main,lib}.rs, capabilities/, icons/
+        gen/apple/           Generated iOS Xcode project (tauri ios init) + fastlane/ (App Store lanes)
   mockups/                   shared Columbine design system / refs (root-level)
   CLAUDE.md  README.md       repo docs (root-level)
 ```
@@ -119,10 +135,14 @@ support-calculator/          workspace root (private; workspaces: ["apps/*"]; on
   the app self-hosts fonts and makes no network calls. Loosen only if a real asset is blocked.
 
 **Prerequisite:** building the desktop app needs the **Rust toolchain** (`rustc`/`cargo` via
-[rustup](https://rustup.rs)) and, on macOS, the Xcode Command Line Tools. The web workspace
-needs neither. **Scope today: local macOS build only** — Windows/CI packaging and code
-signing / notarization are deferred (unsigned local builds trigger a Gatekeeper warning
-off-machine).
+[rustup](https://rustup.rs)) and, on macOS, the Xcode Command Line Tools. Building/running the
+**iOS** target additionally needs the full **Xcode** app, an **iOS Simulator runtime**
+(`xcodebuild -downloadPlatform iOS`), **CocoaPods** (`brew install cocoapods`), and the iOS
+Rust targets (`aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`). The web
+workspace needs none of it. **Scope today: local macOS build + iOS Simulator** — the iOS App
+Store path (signing, fastlane upload) is **scaffolded but dormant** pending a paid Apple
+Developer account, and Windows/CI packaging plus macOS code signing / notarization are
+deferred (unsigned local macOS builds trigger a Gatekeeper warning off-machine).
 
 ## Configuration
 
@@ -269,6 +289,14 @@ logic is based on so it can be verified.
   webview; `desktop:dev` / `desktop:build` are wired. **Local macOS build only** — Windows/CI
   packaging and signing are deferred, and building requires the Rust toolchain. See
   **Monorepo layout & desktop app**.
+- **The same harness now targets iOS.** `tauri ios init` generated the Xcode project at
+  `apps/desktop/src-tauri/gen/apple/` (tracked in git, with build output gitignored); `ios:dev`
+  / `ios:build` are wired, and `vite.config.ts` honors `TAURI_DEV_HOST` for physical-device
+  dev. **iOS Simulator runs work today** (no Apple account). The **App Store path is
+  scaffolded but dormant**: `bundle > iOS` config, `--export-method app-store-connect` IPA
+  output, and env-driven **fastlane** lanes (`gen/apple/fastlane/`, `beta`/`release`) are in
+  place, awaiting a paid Apple Developer account + credentials. See **Monorepo layout &
+  desktop app** and README → _Run on iOS_.
 - **Tailwind v4 is installed** and CSS-configured (`@tailwindcss/vite`, no config files);
   Columbine tokens live in `src/index.css` and are exposed to utilities via `@theme inline`.
 - The Vite starter has been **replaced**: `src/App.tsx` renders the app shell (`AppHeader`
@@ -325,6 +353,8 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Support-calculation engine (`C.R.S. §14-10-115`) | ⬜ | — | ⬜ |
 | State wiring / live-updating estimate | ⬜ | ⬜ | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
+| Mobile app (Tauri iOS, `apps/desktop`) — Simulator build | — | — | ✅ |
+| iOS App Store distribution (fastlane lanes, signing) | — | — | ⬜ |
 
 When you complete a stage, flip the cell to ✅ (or 🎨 when only a mockup is added), add a
 row for any new feature, and cite the statute/guideline for anything under **Logic**.

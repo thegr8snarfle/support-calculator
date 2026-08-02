@@ -9,9 +9,20 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const config = loadAppConfig(env)
 
+  // Tauri mobile dev sets TAURI_DEV_HOST so a physical device can reach the dev
+  // server. When unset (desktop / iOS simulator), bind to localhost as before.
+  const host = process.env.TAURI_DEV_HOST
+
   return {
     plugins: [react(), tailwindcss()],
-    server: { port: config.port, strictPort: true },
+    server: {
+      port: config.port,
+      strictPort: true,
+      host: host || false,
+      hmr: host
+        ? { protocol: 'ws', host, port: config.port + 1 }
+        : undefined,
+    },
     preview: { port: config.port, strictPort: true },
   }
 })
