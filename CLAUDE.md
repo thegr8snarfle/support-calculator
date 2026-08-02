@@ -250,6 +250,12 @@ As the app grows beyond the worksheet, organize by **feature**:
 
 - **Planning:** for multi-file or architectural changes, start in **Plan Mode** and get the
   plan approved before editing.
+- **Plan audit trail:** every plan produced in Plan Mode is saved as its **own file** under
+  `plans/`, named `plans/YYYY-MM-DD-<task-slug>.md` (date the plan was written + a kebab-case
+  task description, e.g. `plans/2026-08-02-mobile-viewport-overflow-fix.md`). **Never overwrite
+  or reuse a previous task's plan file** — `plans/` is an append-only record of what was planned
+  and done. If Plan Mode auto-creates a generically named file, rename it to this convention
+  before finishing. One plan per task; keep it even after the work lands.
 - **Refactoring:** before editing a component, consider whether it should be broken out into
   `src/features/[feature-name]/` per the **Directory strategy**.
 - **Session status:** at the end of a session, update the **Feature roadmap & status** table

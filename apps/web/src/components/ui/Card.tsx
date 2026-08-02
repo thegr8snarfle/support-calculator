@@ -27,7 +27,7 @@ export function Card({ step, title, hint, help, id, children, className }: CardP
       id={id}
       tabIndex={id ? -1 : undefined}
       className={cn(
-        'bg-surface border border-border rounded-lg shadow-sm p-6 mb-6',
+        'bg-surface border border-border rounded-lg shadow-sm p-4 sm:p-6 mb-6',
         // scroll-margin so a scrolled-to card clears the header; no focus outline box
         id && 'scroll-mt-6 focus:outline-none',
         className,

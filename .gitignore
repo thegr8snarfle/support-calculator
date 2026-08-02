@@ -34,3 +34,4 @@ apps/desktop/src-tauri/gen/schemas/
 
 # Local env files (now under apps/web/); .env.template is the tracked reference
 .env
+/plans/2026-08-02-mobile-viewport-overflow-fix.md

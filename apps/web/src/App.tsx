@@ -5,9 +5,9 @@ import { StepFlowProvider, useStepFlow } from './features/navigation'
 function AppShell() {
   const { current } = useStepFlow()
   return (
-    <div className="min-h-svh bg-bg text-text">
+    <div className="min-h-svh overflow-x-clip bg-bg text-text">
       <AppHeader />
-      <main className="max-w-[1240px] mx-auto p-6 lg:p-8">
+      <main className="max-w-[1240px] mx-auto p-4 sm:p-6 lg:p-8">
         {current === 'review' ? (
           <ReviewPage />
         ) : current === 'results' ? (

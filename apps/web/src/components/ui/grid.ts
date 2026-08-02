@@ -3,4 +3,5 @@
  * and every field row line up. `1fr` label column + two party input columns.
  */
 export const partyGridCols =
-  'grid grid-cols-[1fr_112px_112px] sm:grid-cols-[1fr_148px_148px] gap-3'
+  'grid grid-cols-[minmax(0,1fr)_minmax(0,6.5rem)_minmax(0,6.5rem)] ' +
+  'sm:grid-cols-[minmax(0,1fr)_minmax(0,9.25rem)_minmax(0,9.25rem)] gap-2 sm:gap-3'
