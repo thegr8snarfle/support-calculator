@@ -4,10 +4,9 @@ import { RecapCard } from '../../../components/ui/RecapCard'
 import { RecapValue } from '../../../components/ui/RecapValue'
 import { ParentingTimeBar } from './ParentingTimeBar'
 import { WORKSHEET_SECTIONS } from '../sections'
-import { SAMPLE_WORKSHEET } from '../../../mocks'
+import { useWorksheetStore } from '../store/worksheetStore'
+import { useRules } from '../hooks/useRules'
 import { formatUsd } from '../../../lib/format'
-
-const { parties, childrenCount, income, parentingTime, sharedCosts } = SAMPLE_WORKSHEET
 
 export type WorksheetRecapProps = {
   /**
@@ -18,11 +17,17 @@ export type WorksheetRecapProps = {
 }
 
 /**
- * Read-only, grouped recap of everything the worksheet collects, driven by the shared
- * mock fixtures. Shared by the Review step (with Edit links back to the worksheet) and
- * the Results step (read-only) so the two recaps can never drift apart.
+ * Read-only, grouped recap of everything the worksheet collects, read from the
+ * worksheet store. Shared by the Review step (with Edit links back to the worksheet)
+ * and the Results step (read-only) so the two recaps can never drift apart.
  */
 export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
+  const input = useWorksheetStore((s) => s.input)
+  const { rules } = useRules()
+  const { parties, childrenCount, income, parentingTime, addOns } = input
+  const incomeLines = rules?.incomeLines ?? []
+  const addOnLines = rules?.addOnLines ?? []
+
   const edit = (sectionId: string, label: string) =>
     onEdit ? <EditLink label={label} onClick={() => onEdit(sectionId)} /> : undefined
 
@@ -40,16 +45,19 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
       {/* 2 · Monthly income */}
       <RecapCard step={2} title="Monthly income" action={edit(WORKSHEET_SECTIONS.income, 'monthly income')}>
         <PartyHeader nameA={parties.a.name} nameB={parties.b.name} />
-        {income.map((row, i) => (
-          <FieldRow
-            key={row.label}
-            label={row.label}
-            hint={row.hint}
-            divider={i !== 0}
-            a={<RecapValue muted={row.a === 0}>{formatUsd(row.a)}</RecapValue>}
-            b={<RecapValue muted={row.b === 0}>{formatUsd(row.b)}</RecapValue>}
-          />
-        ))}
+        {incomeLines.map((line, i) => {
+          const row = income[line.id] ?? { a: 0, b: 0 }
+          return (
+            <FieldRow
+              key={line.id}
+              label={line.label}
+              hint={line.hint}
+              divider={i !== 0}
+              a={<RecapValue muted={row.a === 0}>{formatUsd(row.a)}</RecapValue>}
+              b={<RecapValue muted={row.b === 0}>{formatUsd(row.b)}</RecapValue>}
+            />
+          )
+        })}
       </RecapCard>
 
       {/* 3 · Parenting time */}
@@ -57,20 +65,21 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
         <ParentingTimeBar
           nameA={parties.a.name}
           nameB={parties.b.name}
-          nightsA={parentingTime.nightsA}
-          nightsB={parentingTime.nightsB}
+          nightsA={parentingTime.a}
+          nightsB={parentingTime.b}
+          yearNights={rules?.yearNights}
         />
       </RecapCard>
 
       {/* 4 · Monthly shared costs */}
       <RecapCard step={4} title="Monthly shared costs" action={edit(WORKSHEET_SECTIONS.costs, 'shared costs')}>
-        {sharedCosts.map((row, i) => (
+        {addOnLines.map((line, i) => (
           <FieldRow
-            key={row.label}
-            label={row.label}
-            hint={row.hint}
+            key={line.id}
+            label={line.label}
+            hint={line.hint}
             divider={i !== 0}
-            wide={<RecapValue>{formatUsd(row.amount)}</RecapValue>}
+            wide={<RecapValue>{formatUsd(addOns[line.id] ?? 0)}</RecapValue>}
           />
         ))}
       </RecapCard>

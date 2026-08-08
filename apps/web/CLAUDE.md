@@ -51,6 +51,51 @@ duplicated here.
 - Keep business logic (support calculations) separate from presentational components so it
   can be unit-tested independently.
 
+## Layered architecture (calculation flow)
+
+The support calculation is split into four layers with a **strict one-way dependency rule**.
+Keep it that way — it is what makes the engine testable and the statute swappable.
+
+```
+components/           presentational; props + store selectors
+      ↓
+hooks/ + store/       React glue: Zustand state, async orchestration, memoized derivation
+      ↓
+src/domain/support/   PURE. No React, no services, no I/O. (input, ruleSet) => estimate
+      ↑ (data only)
+src/services/rules/   API layer: repository port + swappable adapters
+```
+
+- **`src/domain/support/`** — the calculation engine. It must never import React, the
+  services layer, or perform I/O, and it must contain **no statutory constants**: every
+  threshold, rate, and table arrives as data on the `SupportRuleSet`. It is *total* —
+  incomplete input returns a flagged estimate rather than throwing, so the UI can show a
+  partial figure while the user types.
+- **`src/services/rules/`** — the data layer. Consumers depend on the `RulesRepository`
+  **port** and the `createRulesRepository` factory, never on a concrete adapter. The port is
+  **async by design** even though today's adapter reads bundled JSON, so pointing the app at
+  a remote MCP/RAG statute source later changes no call sites. Every payload — bundled or
+  remote — goes through `parseRuleSet` (Zod), the app's trust boundary.
+- **`useSupportEstimate`** is the single seam where state meets the engine. Don't call
+  `calculateChildSupport` anywhere else, and don't cache derived totals in the store.
+
+> **Deviation from the directory strategy below:** `services/` normally lives *inside* a
+> feature, but the rules repository is app-level because it is not worksheet-specific —
+> spousal maintenance and other jurisdictions will consume the same port. `src/domain/` is
+> likewise app-level and framework-free.
+
+### Statute data
+
+Statutory values live in `src/services/rules/data/<jurisdiction>/<year>.json`, not in code —
+including *which* income and add-on lines the worksheet renders. Adding a state or reacting
+to an amendment is a data change. Each rule set carries `effective.from`, per-rule
+`citation`s, and a `source` block recording provenance.
+
+**Never hand-enter or recall statutory tables from memory.** The Colorado schedule (800 rows)
+and parenting-time credit table (367 entries) were transcribed programmatically from the
+enrolled bill text, with invariants (monotonicity, completeness, uniform steps) asserted
+before the JSON was emitted. Those same invariants are re-checked by the Zod schema at load.
+
 ## Directory strategy
 
 As the app grows beyond the worksheet, organize by **feature**:
@@ -58,10 +103,13 @@ As the app grows beyond the worksheet, organize by **feature**:
 - `src/features/[feature-name]/`
   - `components/` — feature-specific UI
   - `hooks/` — feature business logic (colocated, not in a global hooks dir)
-  - `services/` — API / TanStack Query logic
+  - `store/` — feature state (Zustand)
+  - `services/` — feature-specific API logic
   - `index.ts` — the feature's clean public API (import features via their `index.ts`)
 - `src/components/ui/` — shared atomic components (the Columbine primitives; shadcn atoms
   may join here).
+- `src/domain/` — pure, framework-free business logic (the calculation engine).
+- `src/services/` — app-level data access shared across features (the rules repository).
 - `src/types/` — shared/domain types (see **Type organization** above); this takes
   precedence over colocating shared domain types inside a feature.
 
@@ -78,8 +126,17 @@ As the app grows beyond the worksheet, organize by **feature**:
   It uses the **installed Google Chrome** (`channel: 'chrome'`) to avoid downloading a
   Chromium binary; for a hermetic CI run, drop the channel and `npx playwright install chromium`.
   Keep e2e specs a thin smoke layer (view transitions, key affordances) — not exhaustive.
-- **Unit (Vitest):** not installed yet; earmarked for the calculation engine and component
-  tests. Add it when that logic lands, then update this section and the root tech-stack list.
+- **Unit (Vitest):** `npm run test` (`test:watch` for watch mode). Config lives in the `test`
+  block of `vite.config.ts` (jsdom, globals, `src/test/setup.ts`, and an `e2e/**` exclude so
+  Vitest never picks up Playwright specs). Specs are colocated as `*.test.ts(x)`.
+  - **Engine tests run against the real shipped rule set**, not a toy fixture, so a bad
+    statute transcription fails there. Cover boundaries explicitly: sole care, even split,
+    child-count limits, low-income bands, and above the schedule ceiling.
+  - The store's `loadRules` takes the repository as an argument, so inject a fake — **do not
+    mock modules** to test the data layer.
+  - When a bug is only visible in the browser console (e.g. a render loop that still lets
+    every assertion pass), add a unit test that pins the invariant — see
+    `StepFlowProvider.test.tsx`.
 
 ## Design system (Columbine)
 

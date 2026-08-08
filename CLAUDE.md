@@ -28,6 +28,10 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
   `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`
 - Self-hosted variable fonts via `@fontsource-variable` (Bricolage Grotesque + Public Sans)
 - **Playwright** (`@playwright/test`) — e2e smoke tests under `e2e/` (see **Testing**)
+- **Vitest** — unit tests for the calculation engine, data layer, store and hooks
+  (`npm run test`), with `@testing-library/react` + jsdom
+- **Zustand** — worksheet input state (`src/features/worksheet/store/`)
+- **Zod** — validates statute rule sets at the data-layer trust boundary
 - **npm workspaces** — the repo root is a private workspace root (`workspaces: ["apps/*"]`)
   with one lockfile; `apps/web` = `@support-calculator/web`, `apps/desktop` =
   `@support-calculator/desktop`.
@@ -36,14 +40,13 @@ worksheet are built; calculation logic and state wiring are not yet in place (se
   desktop app**).
 
 ### Intended / target stack (not yet installed — add as features need it)
-- **State:** Zustand (global UI state), TanStack Query (server state) — once the app talks
-  to a backend or needs cross-view state.
+- **State:** TanStack Query (server state) — once the app actually talks to a backend.
+  (Zustand is installed and in use; see **Installed now**.)
 - **Components:** shadcn/ui (Radix-based) may be introduced under `src/components/ui/`
   alongside the hand-built Columbine primitives; new shared atoms can follow the shadcn
   pattern. Existing Columbine primitives are custom, not shadcn.
-- **Forms & validation:** Zod + React Hook Form — for the worksheet's input/validation layer.
-- **Testing:** Vitest — for the calculation engine and component/unit tests (Playwright, for
-  e2e, is already installed — see **Installed now**).
+- **Forms:** React Hook Form — if the worksheet's input layer outgrows the current
+  store-bound fields. (Zod is installed and used for rule-set validation.)
 
 > Keep this list honest: when you install one of the "intended" tools, move it up to
 > **Installed now** in the same change.
@@ -58,7 +61,7 @@ Run these **from the repo root** — the root `package.json` delegates each to t
 - `npm run lint` — run ESLint over the project
 - `npm run preview` — preview the production build locally
 - `npm run test:e2e` — run the Playwright e2e smoke suite (auto-starts the dev server)
-- `npm run test` — run Vitest _(pending: Vitest not installed / no `test` script yet)_
+- `npm run test` — run the Vitest unit suite (`test:watch` for watch mode)
 
 Desktop (Tauri) — delegate to `@support-calculator/desktop`:
 
@@ -191,7 +194,9 @@ now live in **`apps/web/CLAUDE.md`**.
 
 - **Planning:** for multi-file or architectural changes, start in **Plan Mode** and get the
   plan approved before editing.
-- **Plan audit trail:** every plan produced in Plan Mode is saved as its **own file** under
+- **Plan audit trail:** Do not create plan artifacts unless being explicitly told to do so, 
+  instead just walk through the planning process in the console. However, when creating an artifact:
+  every plan produced in Plan Mode is saved as its **own file** under
   `plans/`, named `plans/YYYY-MM-DD-<task-slug>.md` (date the plan was written + a kebab-case
   task description, e.g. `plans/2026-08-02-mobile-viewport-overflow-fix.md`). **Never overwrite
   or reuse a previous task's plan file** — `plans/` is an append-only record of what was planned
@@ -204,18 +209,36 @@ now live in **`apps/web/CLAUDE.md`**.
   progress; don't create a separate status file.
 - **Honesty:** keep this doc accurate. If you change the stack, structure, or status, update
   the relevant section in the same change rather than leaving stale claims.
+- **Always** only include a succinct description of changes since the last commit if ever asked
+  to commit changes to a branch.
 
 ## Domain & business rules
 
-The calculator implements Colorado family-support law. Authoritative sources for the
-business rules:
+The calculator implements Colorado family-support law (`C.R.S. §14-10-115`).
 
-- Colorado child support guide: https://divorce.law/guides/child-support-calculator/colorado/
-- C.R.S. Title 14 (2024), Domestic Matters:
-  https://content.leg.colorado.gov/sites/default/files/images/olls/crs2024-title-14.pdf
+**Controlling law: HB 25-1159, effective 2026-03-01.** It replaced the prior framework —
+it **eliminated the 93-overnight "cliff"** and the 1.50 shared-care multiplier in favour of
+a continuous parenting-time credit table (every overnight earns credit), raised the schedule
+ceiling from $30,000 to $40,000 combined monthly AGI, and redefined the self-support reserve
+as a formula keyed to the state minimum wage. **Anything describing the 93-night threshold or
+the 1.50 multiplier is describing repealed law.**
 
-When implementing or changing calculation logic, cite the specific statute/guideline the
-logic is based on so it can be verified.
+Sources, with an important caveat:
+
+- **HB 25-1159 Final Act** — https://leg.colorado.gov/bill_files/85404/download — the only
+  machine-readable source that actually contains the tables. Use *this* one: the **Signed
+  Act** PDF (`/bill_files/40922/download`) is a pure scan with zero extractable text.
+- C.R.S. Title 14 (2024): https://content.leg.colorado.gov/sites/default/files/images/olls/crs2024-title-14.pdf
+  — **does not contain the schedule.** At §14-10-115(7)(b) it reads literally
+  `Insert PDF file -- 2019 -- 2nd version effective July 1, 2020 -- Contact pub team for WP
+  file`. The same placeholder appears on public.law. It is still useful for the surrounding
+  statutory text, but it cannot supply the numbers.
+- Background/plain-English: https://divorce.law/guides/child-support-calculator/colorado/
+
+When implementing or changing calculation logic, cite the specific statute subsection so it
+can be verified — the rule-set JSON carries a `citation` per rule for exactly this reason.
+**Never transcribe a statutory table by hand or from memory** (see `apps/web/CLAUDE.md` →
+_Statute data_).
 
 ## Design
 
@@ -243,32 +266,40 @@ reference material.
   Columbine tokens live in `src/index.css` and are exposed to utilities via `@theme inline`.
 - The Vite starter has been **replaced**: `src/App.tsx` renders the app shell (`AppHeader`
   + `WorksheetPage`); the reusable UI primitives live in `src/components/ui/`.
-- The **child-support worksheet is built as a pixel-faithful static mockup** —
-  presentational components taking props, hardcoded example values, a UI-only light/dark
-  theme toggle. **No Colorado support-calculation logic and no state wiring exist yet.**
+- **The calculation engine and state wiring are live.** The worksheet is fully interactive:
+  every input is bound to a Zustand store and the estimate recalculates as you type, flowing
+  through to Review and Results. The layered architecture is
+  `components → hooks/store → src/domain/support (pure engine) ← src/services/rules (data)`
+  — see `apps/web/CLAUDE.md` → _Layered architecture_.
+- **Statute rules are data, not code** (`src/services/rules/data/co/2026.json`): the 800-row
+  schedule, the 367-entry parenting-time credit table, low-income bands and the self-support
+  reserve formula all live there with per-rule citations, validated by Zod on load. The
+  repository port is **async**, so a future MCP/RAG statute source is an adapter swap
+  (`mcpRulesRepository` is a documented, inert stub). Adding a state = adding a rule set.
+- **The engine implements HB 25-1159 (effective 2026-03-01), not the older framework** — the
+  93-overnight cliff and 1.50 multiplier are repealed. See **Domain & business rules**.
 - The **Review step is built as static UI** (`src/features/worksheet/components/ReviewPage.tsx`):
   a read-only, grouped recap of the worksheet — one card per section with an Edit link, a
   compact estimate echo, and Back / See-full-results buttons. No mockup existed for it, so
   it was designed in the Columbine language. It reuses the worksheet's `Card` / `FieldRow` /
-  `PartyHeader` / `ParentingTimeBar`.
+  `PartyHeader` / `ParentingTimeBar`, and now reads live figures from the store.
 - The **Results step is built as static UI** (`src/features/worksheet/components/ResultsPage.tsx`):
   a standalone, printable summary — hero estimate, an expanded "how this was calculated"
   breakdown (reusing the results-rail vocabulary), and a read-only recap of every input. No
   mockup existed, so it was designed in the Columbine language. The Review and Results recaps
   share one `WorksheetRecap` component; the read-only `RecapCard` / `RecapValue` primitives
-  live in `src/components/ui/`. The "Print / Export PDF" button is presentational for now.
-- **Shared static data lives in `src/mocks/`** — a typed mock-fixture repository
-  (`SAMPLE_WORKSHEET` / `SAMPLE_ESTIMATE`) that the worksheet, review, and results all read
-  from, so their numbers can't drift. It's shaped as domain-ish objects of plain numbers
-  (formatting via `src/lib/format.ts`) so the future calculation engine and its unit tests
-  can consume the same fixtures.
+  live in `src/components/ui/`. The rail and the Results page also share one
+  `EstimateBreakdown` component. The "Print / Export PDF" button is presentational for now.
+- **`src/mocks/`** now seeds the store's default worksheet and gives the unit tests a shared
+  realistic input; the domain types it once carried live in `src/types/support.ts`.
 - **Guided-flow navigation is wired** (`src/features/navigation/`): a custom, reducer-backed
   `useStepFlow()` hook (Context provider at the app root) drives Worksheet → Review → Results — the
   header stepper chips, the rail's "Review full worksheet" button, and Review's Back / Edit
   links all navigate; each Edit jumps back and scrolls to that worksheet section. Per-step
-  `status` is modeled as a seam for future validation, but this is **view switching only —
-  no calculation or input state yet.** All three chips are now live; Review's "See full
-  results" advances to the Results step.
+  `status` is now driven by the calculation layer (`useWorksheetStatus` → `SET_STATUS`), and
+  the reducer gates progression via `canAdvance` / `canGoTo` — steps ahead of an unfinished
+  worksheet are unreachable, while warnings (e.g. overnights ≠ 365) are surfaced inline
+  rather than blocking.
 - Design foundation is done: the "Columbine" theme, worksheet mockups, and style guide live
   in `mockups/` (see the Design section).
 
@@ -284,16 +315,22 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Columbine design system & theme (tokens, dark mode) | ✅ | ✅ | — |
 | Reusable UI component library (`src/components/ui/`) | ✅ | ✅ | — |
 | App shell (`AppHeader`, guided-step nav, theme toggle) | ✅ | ✅ | ✅ |
-| Child-support worksheet — children count | ✅ | ✅ | ⬜ |
-| Child-support worksheet — monthly income (both parties) | ✅ | ✅ | ⬜ |
-| Child-support worksheet — parenting time + balance bar | ✅ | ✅ | ⬜ |
-| Child-support worksheet — monthly shared costs | ✅ | ✅ | ⬜ |
-| Results rail (sticky estimate breakdown) | ✅ | ✅ | ⬜ |
-| Review step (grouped recap, per-section Edit links) | ⬜ | ✅ | ⬜ |
-| Detailed results / printable summary (Results step) | ⬜ | ✅ | ⬜ |
+| Child-support worksheet — children count | ✅ | ✅ | ✅ |
+| Child-support worksheet — monthly income (both parties) | ✅ | ✅ | ✅ |
+| Child-support worksheet — parenting time + balance bar | ✅ | ✅ | ✅ |
+| Child-support worksheet — monthly shared costs | ✅ | ✅ | ✅ |
+| Results rail (sticky estimate breakdown) | ✅ | ✅ | ✅ |
+| Review step (grouped recap, per-section Edit links) | ⬜ | ✅ | ✅ |
+| Detailed results / printable summary (Results step) | ⬜ | ✅ | ✅ |
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
-| Support-calculation engine (`C.R.S. §14-10-115`) | ⬜ | — | ⬜ |
-| State wiring / live-updating estimate | ⬜ | ⬜ | ⬜ |
+| Support-calculation engine (`C.R.S. §14-10-115`, HB 25-1159) | ⬜ | — | ✅ |
+| Statute data layer (rule sets, Zod validation, MCP-ready port) | — | — | ✅ |
+| State wiring / live-updating estimate | ⬜ | ✅ | ✅ |
+| Step gating from validation (`canAdvance`) | — | ✅ | ✅ |
+| Unit tests (Vitest) — engine, data layer, store, navigation | — | — | ✅ |
+| Print / Export PDF | ⬜ | ✅ | ⬜ |
+| Multi-state support (additional jurisdictions) | — | — | ⬜ |
+| Remote statute source (MCP / RAG adapter) | — | — | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
 | Mobile app (Tauri iOS, `apps/desktop`) — Simulator build | — | — | ✅ |
 | iOS App Store distribution (fastlane lanes, signing) | — | — | ⬜ |

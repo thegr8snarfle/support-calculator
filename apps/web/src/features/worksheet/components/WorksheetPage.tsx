@@ -1,29 +1,45 @@
 import { useEffect } from 'react'
 import { Card } from '../../../components/ui/Card'
-import { CurrencyInput } from '../../../components/ui/CurrencyInput'
-import { NumberInput } from '../../../components/ui/NumberInput'
 import { FieldRow } from '../../../components/ui/FieldRow'
 import { PartyHeader } from '../../../components/ui/PartyHeader'
 import { NumberStepper } from '../../../components/ui/NumberStepper'
 import { HelpTip } from '../../../components/ui/HelpTip'
+import { FieldError } from '../../../components/ui/FieldError'
 import { ParentingTimeBar } from './ParentingTimeBar'
 import { ResultsRail } from './ResultsRail'
 import { SupportCitation } from './SupportCitation'
+import { CountField, MoneyField } from './WorksheetFields'
 import { WORKSHEET_SECTIONS } from '../sections'
 import { useStepFlow } from '../../navigation'
-import { SAMPLE_WORKSHEET, SAMPLE_ESTIMATE } from '../../../mocks'
-import { formatUsd } from '../../../lib/format'
-
-const { parties } = SAMPLE_WORKSHEET
-const PARENT_A = parties.a.name
-const PARENT_B = parties.b.name
+import { useWorksheetStore } from '../store/worksheetStore'
+import { useRules } from '../hooks/useRules'
+import { useSupportEstimate } from '../hooks/useSupportEstimate'
+import { useWorksheetStatus } from '../hooks/useWorksheetStatus'
+import { EMPTY_ESTIMATE } from '../estimateDefaults'
 
 /**
- * The Colorado child-support worksheet. Presentational reproduction of
- * mockups/src/worksheet.html — every value is a static prop; no calculation.
+ * The Colorado child-support worksheet.
+ *
+ * Rows are driven by the loaded rule set (`incomeLines` / `addOnLines`) rather than
+ * hardcoded, so a statute amendment or a different state changes the form without
+ * touching this file. Every input is bound to the worksheet store and the estimate
+ * recomputes as you type.
  */
 export function WorksheetPage() {
   const { next, pendingScroll, clearPendingScroll } = useStepFlow()
+  const { rules, status, error } = useRules()
+  const { estimate } = useSupportEstimate()
+  // Publish worksheet validity to the step flow, which gates advancing.
+  useWorksheetStatus(estimate)
+
+  const input = useWorksheetStore((s) => s.input)
+  const setChildrenCount = useWorksheetStore((s) => s.setChildrenCount)
+  const setIncome = useWorksheetStore((s) => s.setIncome)
+  const setNights = useWorksheetStore((s) => s.setNights)
+  const setAddOn = useWorksheetStore((s) => s.setAddOn)
+
+  const nameA = input.parties.a.name
+  const nameB = input.parties.b.name
 
   // Honor an "Edit" jump from Review: scroll the requested section into view once
   // this page has rendered, then move focus to it and clear the request.
@@ -37,6 +53,8 @@ export function WorksheetPage() {
     }
     clearPendingScroll()
   }, [pendingScroll, clearPendingScroll])
+
+  const maxChildren = rules?.schedule.maxChildren ?? 6
 
   return (
     <>
@@ -53,13 +71,39 @@ export function WorksheetPage() {
         </p>
       </div>
 
+      {status === 'error' && (
+        <div role="alert" className="mb-6">
+          <FieldError>{error ?? 'Could not load the support guidelines.'}</FieldError>
+        </div>
+      )}
+
+      {estimate && estimate.warnings.length > 0 && (
+        <div className="mb-6 flex flex-col gap-1" role="status">
+          {estimate.warnings.map((w) => (
+            <FieldError key={w}>{w}</FieldError>
+          ))}
+        </div>
+      )}
+
       <div className="grid gap-8 items-start lg:grid-cols-[1fr_340px]">
         {/* LEFT: worksheet */}
         <div>
           {/* 1. Children */}
-          <Card id={WORKSHEET_SECTIONS.children} step={1} title="Children in this case" hint="How many children is this support order for?">
+          <Card
+            id={WORKSHEET_SECTIONS.children}
+            step={1}
+            title="Children in this case"
+            hint="How many children is this support order for?"
+          >
             <div className="flex items-center gap-4">
-              <NumberStepper value={2} />
+              <NumberStepper
+                label="Children in this case"
+                value={input.childrenCount}
+                min={1}
+                max={maxChildren}
+                onDecrement={() => setChildrenCount(input.childrenCount - 1)}
+                onIncrement={() => setChildrenCount(input.childrenCount + 1)}
+              />
               <span className="text-[13px] text-text-muted">
                 Only children the two parents share and who are eligible for support.
               </span>
@@ -72,34 +116,33 @@ export function WorksheetPage() {
             step={2}
             title="Monthly income"
             hint="Gross monthly amounts, before taxes."
-            help={<HelpTip label="Use gross income before taxes and deductions — wages, salary, tips, and self-employment net income." />}
+            help={
+              <HelpTip label="Use gross income before taxes and deductions — wages, salary, tips, and self-employment net income." />
+            }
           >
-            <PartyHeader nameA={PARENT_A} nameB={PARENT_B} />
-            <FieldRow
-              label="Gross monthly income"
-              hint="Wages, salary, tips"
-              divider={false}
-              a={<CurrencyInput defaultValue="4,800" />}
-              b={<CurrencyInput defaultValue="6,500" />}
-            />
-            <FieldRow
-              label="Self-employment income"
-              hint="Net of business expenses"
-              a={<CurrencyInput placeholder="0" />}
-              b={<CurrencyInput defaultValue="0" />}
-            />
-            <FieldRow
-              label="Maintenance"
-              hint="Alimony paid or received"
-              a={<CurrencyInput placeholder="0" />}
-              b={<CurrencyInput placeholder="0" />}
-            />
-            <FieldRow
-              label="Support for other children"
-              hint="Existing orders"
-              a={<CurrencyInput placeholder="0" />}
-              b={<CurrencyInput defaultValue="450" />}
-            />
+            <PartyHeader nameA={nameA} nameB={nameB} />
+            {(rules?.incomeLines ?? []).map((line, i) => (
+              <FieldRow
+                key={line.id}
+                label={line.label}
+                hint={line.hint}
+                divider={i !== 0}
+                a={
+                  <MoneyField
+                    label={`${line.label} — ${nameA}`}
+                    value={input.income[line.id]?.a ?? 0}
+                    onCommit={(v) => setIncome(line.id, 'a', v)}
+                  />
+                }
+                b={
+                  <MoneyField
+                    label={`${line.label} — ${nameB}`}
+                    value={input.income[line.id]?.b ?? 0}
+                    onCommit={(v) => setIncome(line.id, 'b', v)}
+                  />
+                }
+              />
+            ))}
           </Card>
 
           {/* 3. Parenting time (signature) */}
@@ -107,50 +150,72 @@ export function WorksheetPage() {
             id={WORKSHEET_SECTIONS.parenting}
             step={3}
             title="Parenting time"
-            hint="Overnights with each parent per year (out of 365)."
-            help={<HelpTip label="Overnights are counted per the parenting-time schedule in your order." />}
+            hint={`Overnights with each parent per year (out of ${rules?.yearNights ?? 365}).`}
+            help={
+              <HelpTip label="Overnights are counted per the parenting-time schedule in your order." />
+            }
           >
             <FieldRow
               label="Overnights per year"
               divider={false}
-              a={<NumberInput defaultValue="219" />}
-              b={<NumberInput defaultValue="146" />}
+              a={
+                <CountField
+                  label={`Overnights per year — ${nameA}`}
+                  value={input.parentingTime.a}
+                  onCommit={(v) => setNights('a', v)}
+                />
+              }
+              b={
+                <CountField
+                  label={`Overnights per year — ${nameB}`}
+                  value={input.parentingTime.b}
+                  onCommit={(v) => setNights('b', v)}
+                />
+              }
             />
-            <ParentingTimeBar nameA={PARENT_A} nameB={PARENT_B} nightsA={219} nightsB={146} />
+            <ParentingTimeBar
+              nameA={nameA}
+              nameB={nameB}
+              nightsA={input.parentingTime.a}
+              nightsB={input.parentingTime.b}
+              yearNights={rules?.yearNights ?? 365}
+            />
           </Card>
 
           {/* 4. Monthly shared costs */}
-          <Card id={WORKSHEET_SECTIONS.costs} step={4} title="Monthly shared costs" hint="Added to the obligation and split by income share.">
-            <FieldRow label="Work-related childcare" divider={false} wide={<CurrencyInput defaultValue="780" />} />
-            <FieldRow
-              label="Children's health insurance"
-              hint="Premium for the children's portion"
-              wide={<CurrencyInput defaultValue="240" />}
-            />
-            <FieldRow
-              label="Extraordinary medical"
-              hint="Recurring, over $250/yr"
-              wide={<CurrencyInput defaultValue="60" />}
-            />
+          <Card
+            id={WORKSHEET_SECTIONS.costs}
+            step={4}
+            title="Monthly shared costs"
+            hint="Added to the obligation and split by income share."
+          >
+            {(rules?.addOnLines ?? []).map((line, i) => (
+              <FieldRow
+                key={line.id}
+                label={line.label}
+                hint={line.hint}
+                divider={i !== 0}
+                wide={
+                  <MoneyField
+                    label={line.label}
+                    value={input.addOns[line.id] ?? 0}
+                    onCommit={(v) => setAddOn(line.id, v)}
+                  />
+                }
+              />
+            ))}
           </Card>
         </div>
 
         {/* RIGHT: results rail */}
         <aside className="lg:sticky lg:top-6">
           <ResultsRail
-            amount={formatUsd(SAMPLE_ESTIMATE.amount)}
-            payer={parties[SAMPLE_ESTIMATE.payer].name}
-            recipient={parties[SAMPLE_ESTIMATE.recipient].name}
-            nameA={PARENT_A}
-            nameB={PARENT_B}
-            combinedIncome={formatUsd(SAMPLE_ESTIMATE.combinedIncome)}
-            shareA={SAMPLE_ESTIMATE.shareA}
-            shareB={SAMPLE_ESTIMATE.shareB}
-            basicObligation={formatUsd(SAMPLE_ESTIMATE.basicObligation)}
-            parentingAdjustment={formatUsd(SAMPLE_ESTIMATE.parentingAdjustment)}
-            addOns={formatUsd(SAMPLE_ESTIMATE.addOns)}
-            netLabel={`${parties[SAMPLE_ESTIMATE.payer].name}'s share, net`}
-            netTotal={formatUsd(SAMPLE_ESTIMATE.netTotal)}
+            estimate={estimate ?? EMPTY_ESTIMATE}
+            payer={estimate ? input.parties[estimate.payer].name : nameB}
+            recipient={estimate ? input.parties[estimate.recipient].name : nameA}
+            nameA={nameA}
+            nameB={nameB}
+            netLabel={`${estimate ? input.parties[estimate.payer].name : nameB}'s share, net`}
             onReview={next}
             citation={<SupportCitation />}
           />

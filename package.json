@@ -11,6 +11,8 @@
     "build": "npm run build -w @support-calculator/web",
     "preview": "npm run preview -w @support-calculator/web",
     "lint": "npm run lint -w @support-calculator/web",
+    "test": "npm run test -w @support-calculator/web",
+    "test:watch": "npm run test:watch -w @support-calculator/web",
     "test:e2e": "npm run test:e2e -w @support-calculator/web",
     "desktop:dev": "npm run dev -w @support-calculator/desktop",
     "desktop:build": "npm run build -w @support-calculator/desktop",

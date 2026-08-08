@@ -6,7 +6,7 @@ type Theme = 'light' | 'dark'
 /** Top app bar: brand, guided-flow steps, and the light/dark theme toggle. */
 export function AppHeader() {
   const [theme, setTheme] = useState<Theme>('light')
-  const { current, steps, goTo } = useStepFlow()
+  const { current, steps, goTo, canGoTo } = useStepFlow()
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -33,19 +33,30 @@ export function AppHeader() {
       <nav className="hidden sm:flex items-center gap-2 text-[13px] text-text-subtle" aria-label="Progress">
         {steps.map((step, i) => {
           const active = step.id === current
+          // Steps ahead of an unfinished worksheet stay unreachable, so a chip can
+          // never open a Review/Results page built from incomplete input.
+          const reachable = canGoTo(step.id)
           return (
             <span key={step.id} className="flex items-center gap-2">
               {i > 0 && <span aria-hidden="true">·</span>}
               <button
                 type="button"
                 onClick={() => goTo(step.id)}
+                disabled={!reachable}
                 aria-current={active ? 'step' : undefined}
-                className={`focus-ring rounded-sm flex items-center gap-2 px-1 py-0.5 cursor-pointer hover:text-text ${
+                title={reachable ? undefined : 'Finish the worksheet first'}
+                className={`focus-ring rounded-sm flex items-center gap-2 px-1 py-0.5 cursor-pointer hover:text-text disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:text-text-subtle ${
                   active ? 'text-text font-semibold' : ''
                 }`}
               >
                 <span
-                  className={`w-[7px] h-[7px] rounded-full ${active ? 'bg-primary' : 'bg-border-strong'}`}
+                  className={`w-[7px] h-[7px] rounded-full ${
+                    active
+                      ? 'bg-primary'
+                      : step.status === 'complete'
+                        ? 'bg-positive'
+                        : 'bg-border-strong'
+                  }`}
                 />
                 {step.label}
               </button>

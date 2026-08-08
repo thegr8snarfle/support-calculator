@@ -1,12 +1,1 @@
-// Public API for the mock-fixture repository. Import example data from here.
-export {
-  SAMPLE_WORKSHEET,
-  SAMPLE_ESTIMATE,
-  SUPPORT_STATUTE,
-} from './supportFixtures'
-export type {
-  WorksheetFixture,
-  EstimateFixture,
-  IncomeRow,
-  SharedCostRow,
-} from './supportFixtures'
+export { SAMPLE_WORKSHEET, EMPTY_WORKSHEET, SUPPORT_STATUTE } from './supportFixtures'

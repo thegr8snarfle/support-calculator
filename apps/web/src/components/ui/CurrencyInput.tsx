@@ -22,6 +22,7 @@ export function CurrencyInput({ error, className, ...props }: CurrencyInputProps
       </span>
       <input
         inputMode="decimal"
+        aria-invalid={error || undefined}
         className={cn(fieldBase, fieldStateClass(error), 'pl-[22px] pr-3', className)}
         {...props}
       />

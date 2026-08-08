@@ -12,6 +12,7 @@ export function NumberInput({ error, className, ...props }: NumberInputProps) {
   return (
     <input
       inputMode="numeric"
+      aria-invalid={error || undefined}
       className={cn(fieldBase, fieldStateClass(error), 'px-3', className)}
       {...props}
     />

@@ -1,9 +1,11 @@
-import { AppHeader, WorksheetPage, ReviewPage, ResultsPage } from './features/worksheet'
+import { AppHeader, WorksheetPage, ReviewPage, ResultsPage, useRules } from './features/worksheet'
 import { StepFlowProvider, useStepFlow } from './features/navigation'
 
 /** App shell: header + the active step's page. Reads the current step from the flow. */
 function AppShell() {
   const { current } = useStepFlow()
+  // Load the statute rule set once for the whole flow (the app's only async boundary).
+  useRules()
   return (
     <div className="min-h-svh overflow-x-clip bg-bg text-text">
       <AppHeader />

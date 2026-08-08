@@ -12,9 +12,8 @@ export type Step = 'worksheet' | 'review' | 'results'
 export const STEP_ORDER: Step[] = ['worksheet', 'review', 'results']
 
 /**
- * Per-step validation / completion state. A deliberate seam: today every step is
- * 'incomplete', but the input + calculation layer will move steps to 'complete' /
- * 'error' via the SET_STATUS action.
+ * Per-step validation / completion state, driven by the input + calculation layer
+ * via the SET_STATUS action (see `features/worksheet/hooks/useWorksheetStatus`).
  */
 export type StepStatus = 'incomplete' | 'complete' | 'error'
 
@@ -56,11 +55,37 @@ function shift(current: Step, delta: number): Step {
   return STEP_ORDER[next]
 }
 
+/**
+ * Whether the flow may move forward from `from`.
+ *
+ * Advancing past the Worksheet requires it to be filled in — a Review or Results
+ * page built from an incomplete worksheet would present a figure that looks
+ * authoritative but isn't. `'error'` (e.g. overnights that don't total 365) is
+ * deliberately *not* blocking: the estimate is still meaningful and the warning is
+ * shown inline, so we surface it rather than trapping the user.
+ *
+ * Moving backward is always allowed.
+ */
+export function canAdvance(state: StepFlowState, from: Step = state.current): boolean {
+  if (from === 'worksheet') return state.steps.worksheet.status !== 'incomplete'
+  return true
+}
+
+/** Whether a given step may be jumped to directly (the header chips). */
+export function canGoTo(state: StepFlowState, target: Step): boolean {
+  const targetIndex = STEP_ORDER.indexOf(target)
+  const currentIndex = STEP_ORDER.indexOf(state.current)
+  if (targetIndex <= currentIndex) return true
+  return canAdvance(state, 'worksheet')
+}
+
 export function stepFlowReducer(state: StepFlowState, action: StepFlowAction): StepFlowState {
   switch (action.type) {
     case 'GOTO':
+      if (!canGoTo(state, action.step)) return state
       return { ...state, current: action.step, pendingScroll: action.scrollTarget ?? null }
     case 'NEXT':
+      if (!canAdvance(state)) return state
       return { ...state, current: shift(state.current, 1), pendingScroll: null }
     case 'BACK':
       return { ...state, current: shift(state.current, -1), pendingScroll: null }

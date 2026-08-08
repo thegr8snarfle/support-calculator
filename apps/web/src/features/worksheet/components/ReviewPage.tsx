@@ -2,20 +2,21 @@ import { Card } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
 import { WorksheetRecap } from './WorksheetRecap'
 import { useStepFlow } from '../../navigation'
-import { SAMPLE_WORKSHEET, SAMPLE_ESTIMATE } from '../../../mocks'
+import { useWorksheetStore } from '../store/worksheetStore'
+import { useSupportEstimate } from '../hooks/useSupportEstimate'
 import { formatUsd } from '../../../lib/format'
-
-const { parties } = SAMPLE_WORKSHEET
 
 /**
  * The Review step of the guided flow (Worksheet → Review → Results). A read-only,
  * grouped recap of everything the worksheet collects, so the user can confirm the
- * inputs before seeing full results. Values are still static (from the shared mock
- * fixtures — no calculation); each "Edit" jumps back to that worksheet section, and
- * "See full results" advances to the Results step.
+ * inputs before seeing full results. Figures come from the live estimate; each "Edit"
+ * jumps back to that worksheet section, and "See full results" advances to the
+ * Results step.
  */
 export function ReviewPage() {
   const { back, goTo } = useStepFlow()
+  const parties = useWorksheetStore((s) => s.input.parties)
+  const { estimate } = useSupportEstimate()
   return (
     <div className="max-w-[720px]">
       <div className="mb-6">
@@ -38,12 +39,12 @@ export function ReviewPage() {
         </div>
         <div className="mt-1 flex items-baseline gap-1.5">
           <span className="num font-display font-bold text-[40px] tracking-[-0.02em] text-primary">
-            {formatUsd(SAMPLE_ESTIMATE.amount)}
+            {formatUsd(estimate?.amount ?? 0)}
           </span>
           <span className="text-[16px] font-semibold text-text-muted">/mo</span>
         </div>
         <p className="mt-1 text-[14px] text-text-muted m-0">
-          {parties[SAMPLE_ESTIMATE.payer].name} pays {parties[SAMPLE_ESTIMATE.recipient].name} each month.
+          {parties[estimate?.payer ?? 'b'].name} pays {parties[estimate?.recipient ?? 'a'].name} each month.
         </p>
       </Card>
 

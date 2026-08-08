@@ -2,4 +2,5 @@
 export { StepFlowProvider } from './StepFlowProvider'
 export { useStepFlow } from './useStepFlow'
 export type { StepFlow } from './useStepFlow'
-export type { Step, StepStatus, StepMeta } from './stepFlow'
+export type { Step, StepStatus, StepMeta, StepFlowState } from './stepFlow'
+export { canAdvance, canGoTo, stepFlowReducer, initialStepFlow, STEP_ORDER } from './stepFlow'

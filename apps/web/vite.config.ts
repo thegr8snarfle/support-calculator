@@ -1,4 +1,5 @@
-import { defineConfig, loadEnv } from 'vite'
+import { loadEnv } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { loadAppConfig } from './config/appConfig.ts'
@@ -24,5 +25,13 @@ export default defineConfig(({ mode }) => {
         : undefined,
     },
     preview: { port: config.port, strictPort: true },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      setupFiles: ['./src/test/setup.ts'],
+      // Playwright owns e2e/; Vitest must not pick those specs up.
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
+    },
   }
 })

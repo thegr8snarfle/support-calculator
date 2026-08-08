@@ -19,7 +19,11 @@ export type StepFlow = {
   back: () => void
   isFirst: boolean
   isLast: boolean
-  /** Set a step's validation/completion status (seam for the future input layer). */
+  /** Whether the flow may move forward from the current step (validation gate). */
+  canAdvance: boolean
+  /** Whether a step may be jumped to directly — drives the header chips' enabled state. */
+  canGoTo: (step: Step) => boolean
+  /** Set a step's validation/completion status, from the input + calculation layer. */
   setStepStatus: (step: Step, status: StepStatus) => void
   /** Section id queued by `goTo`, to scroll to once the target view has rendered. */
   pendingScroll: string | null

@@ -1,27 +1,28 @@
-import type { ReactNode } from 'react'
 import { Card } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
 import { WorksheetRecap } from './WorksheetRecap'
+import { EstimateBreakdown } from './EstimateBreakdown'
 import { SupportCitation } from './SupportCitation'
 import { useStepFlow } from '../../navigation'
-import { SAMPLE_WORKSHEET, SAMPLE_ESTIMATE } from '../../../mocks'
-import { formatUsd, formatPercent } from '../../../lib/format'
-
-const { parties } = SAMPLE_WORKSHEET
-const e = SAMPLE_ESTIMATE
-const payerName = parties[e.payer].name
-const recipientName = parties[e.recipient].name
+import { useWorksheetStore } from '../store/worksheetStore'
+import { useSupportEstimate } from '../hooks/useSupportEstimate'
+import { EMPTY_ESTIMATE } from '../estimateDefaults'
+import { formatUsd } from '../../../lib/format'
 
 /**
  * The Results step of the guided flow (Worksheet → Review → Results). A complete,
  * standalone printable summary: the headline estimate, an expanded "how this was
  * calculated" breakdown, and a read-only recap of every worksheet input — so a printed
- * Results page stands on its own. Values are static (from the shared mock fixtures); no
- * calculation logic exists yet. Designed in the Columbine language (no mockup existed),
+ * Results page stands on its own. Figures come from the live estimate. Designed in the Columbine language (no mockup existed),
  * reusing the results-rail breakdown vocabulary and the shared worksheet recap.
  */
 export function ResultsPage() {
   const { back } = useStepFlow()
+  const parties = useWorksheetStore((s) => s.input.parties)
+  const { estimate } = useSupportEstimate()
+  const e = estimate ?? EMPTY_ESTIMATE
+  const payerName = parties[e.payer].name
+  const recipientName = parties[e.recipient].name
   return (
     <div className="max-w-[720px]">
       <div className="mb-6">
@@ -56,26 +57,13 @@ export function ResultsPage() {
 
       {/* How this was calculated */}
       <Card title="How this was calculated">
-        <Row label="Combined income" value={formatUsd(e.combinedIncome)} />
-        <div className="flex h-2 rounded-pill overflow-hidden my-1 shadow-[inset_0_0_0_1px_var(--border)]">
-          <span className="bg-primary" style={{ width: `${e.shareA}%` }} />
-          <span className="bg-accent" style={{ width: `${e.shareB}%` }} />
-        </div>
-        <div className="flex justify-between items-center pb-[7px] text-[13px]">
-          <span className="text-text-muted">Income share</span>
-          <span className="num font-semibold">
-            {parties.a.name} {formatPercent(e.shareA)} · {parties.b.name} {formatPercent(e.shareB)}
-          </span>
-        </div>
-
-        <Row label="Basic obligation" value={formatUsd(e.basicObligation)} />
-        <Row label="Parenting-time adjustment" value={formatUsd(e.parentingAdjustment)} valueClass="text-positive" />
-        <Row label="Childcare + health + medical" value={formatUsd(e.addOns)} />
-
-        <div className="flex justify-between items-center border-t border-border mt-1.5 pt-3 text-[14px]">
-          <span className="text-text font-bold">{payerName}&rsquo;s share, net</span>
-          <span className="num font-bold">{formatUsd(e.netTotal)}</span>
-        </div>
+        <EstimateBreakdown
+          estimate={e}
+          nameA={parties.a.name}
+          nameB={parties.b.name}
+          netLabel={`${payerName}’s share, net`}
+          size="full"
+        />
       </Card>
 
       {/* Inputs used */}
@@ -93,15 +81,6 @@ export function ResultsPage() {
         {/* Export isn't wired yet — presentational until the print/summary layer lands. */}
         <Button variant="primary">Print / Export PDF</Button>
       </div>
-    </div>
-  )
-}
-
-function Row({ label, value, valueClass }: { label: ReactNode; value: ReactNode; valueClass?: string }) {
-  return (
-    <div className="flex justify-between items-center py-[7px] text-[13px]">
-      <span className="text-text-muted">{label}</span>
-      <span className={`num font-semibold ${valueClass ?? ''}`}>{value}</span>
     </div>
   )
 }

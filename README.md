@@ -54,6 +54,7 @@ Other scripts:
 | `npm run build` | Type-check and build (`tsc -b && vite build`) |
 | `npm run preview` | Preview the production build locally |
 | `npm run lint` | Run ESLint over the project |
+| `npm run test` | Run the Vitest unit suite (`test:watch` for watch mode) |
 | `npm run test:e2e` | Run the Playwright e2e smoke suite (auto-starts the dev server) |
 | `npm run desktop:dev` | Launch the app in a native desktop window (Tauri) |
 | `npm run desktop:build` | Build + bundle the macOS desktop app (`.app` / `.dmg`) |
@@ -185,7 +186,9 @@ A small **Playwright** e2e suite (`apps/web/e2e/`) smoke-tests the guided flow �
 Worksheet, navigates Worksheet → Review → Results, that Edit links jump back to their section,
 and that the stepper chips switch views. Run it with `npm run test:e2e`; Playwright
 starts the dev server itself and uses your installed Google Chrome (`channel: 'chrome'`).
-Unit tests (Vitest, for the calculation engine) are not set up yet.
+Unit tests run on **Vitest** — `npm run test` (or `npm run test:watch`). They cover the
+calculation engine (against the real shipped statute data), the rule-set validation and
+repository, the worksheet store, and the navigation reducer.
 
 ## Design system — "Columbine"
 
@@ -210,14 +213,17 @@ updated as work lands. Snapshot:
 | --- | :---: | :---: | :---: |
 | Columbine design system & theme | ✅ | ✅ | — |
 | Reusable UI component library | ✅ | ✅ | — |
-| Child-support worksheet (income, parenting time, shared costs) | ✅ | ✅ | ⬜ |
-| Results rail (estimate breakdown) | ✅ | ✅ | ⬜ |
-| Review step (grouped recap, Edit links) | ⬜ | ✅ | ⬜ |
+| Child-support worksheet (income, parenting time, shared costs) | ✅ | ✅ | ✅ |
+| Results rail (estimate breakdown) | ✅ | ✅ | ✅ |
+| Review step (grouped recap, Edit links) | ⬜ | ✅ | ✅ |
 | Guided-flow navigation (Worksheet → Review → Results, `useStepFlow`) | — | ✅ | ✅ |
-| Detailed results / printable summary (Results step) | ⬜ | ✅ | ⬜ |
+| Detailed results / printable summary (Results step) | ⬜ | ✅ | ✅ |
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
-| Support-calculation engine (C.R.S. §14-10-115) | ⬜ | — | ⬜ |
-| State wiring / live-updating estimate | ⬜ | ⬜ | ⬜ |
+| Support-calculation engine (C.R.S. §14-10-115, HB 25-1159) | ⬜ | — | ✅ |
+| Statute data layer (rule sets, validation, MCP-ready port) | — | — | ✅ |
+| State wiring / live-updating estimate | ⬜ | ✅ | ✅ |
+| Print / Export PDF | ⬜ | ✅ | ⬜ |
+| Multi-state support (additional jurisdictions) | — | — | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
 | Mobile app (Tauri iOS, `apps/desktop`) — simulator build | — | — | ✅ |
 | iOS App Store distribution (fastlane, signing) | — | — | ⬜ |
@@ -226,12 +232,27 @@ updated as work lands. Snapshot:
 
 ## Legal basis
 
-Calculation logic follows Colorado family-support law. When implementing or changing it,
-the specific statute/guideline is cited so it can be verified.
+Calculation logic follows Colorado family-support law (**C.R.S. §14-10-115**), as amended by
+**HB 25-1159, effective 1 March 2026**. That act eliminated the former 93-overnight "cliff"
+and the 1.50 shared-care multiplier — every overnight now earns a parenting-time credit from
+a continuous table — raised the schedule ceiling to $40,000 combined monthly income, and made
+the self-support reserve a function of the state minimum wage.
 
-- Colorado child support guide — https://divorce.law/guides/child-support-calculator/colorado/
-- C.R.S. Title 14 (2024), Domestic Matters —
+Statutory values are **data, not code**: the schedule, credit table, low-income bands and
+reserve formula live in `apps/web/src/services/rules/data/co/2026.json`, each carrying the
+subsection it comes from, and are validated on load. Updating for an amendment — or adding
+another state — means adding a rule set, not editing the engine.
+
+- **HB 25-1159 Final Act** — https://leg.colorado.gov/bill_files/85404/download
+  (the machine-readable source the tables were transcribed from; the *Signed Act* PDF is a
+  scan with no extractable text)
+- C.R.S. Title 14 (2024) —
   https://content.leg.colorado.gov/sites/default/files/images/olls/crs2024-title-14.pdf
+  (useful for surrounding statutory text, but note it **omits** the schedule table itself)
+- Colorado child support guide — https://divorce.law/guides/child-support-calculator/colorado/
+
+> **This is an estimate, not legal advice.** Courts may deviate from the guidelines, and the
+> figures here are not a substitute for advice from a Colorado family-law attorney.
 
 ## Contributing
 
