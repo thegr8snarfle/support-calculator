@@ -1,16 +1,20 @@
-import { useEffect, useState } from 'react'
 import { useStepFlow } from '../../navigation'
+import { nextTheme, themeLabel, useTheme } from '../../preferences'
 
-type Theme = 'light' | 'dark'
-
-/** Top app bar: brand, guided-flow steps, and the light/dark theme toggle. */
+/**
+ * Top app bar: brand, guided-flow steps, and the theme toggle.
+ *
+ * Note this component lives under `features/worksheet/` but is really app-level chrome, so
+ * it reaches into `features/preferences` — a cross-feature import. Moving it to a shared
+ * location is a separate refactor.
+ */
 export function AppHeader() {
-  const [theme, setTheme] = useState<Theme>('light')
   const { current, steps, goTo, canGoTo } = useStepFlow()
+  // The theme is owned by ThemeProvider, which also persists it and keeps `data-theme` in
+  // sync — the header only picks the next value in the cycle.
+  const { theme, setTheme } = useTheme()
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
+  const upcoming = nextTheme(theme)
 
   return (
     <header className="flex items-center gap-4 px-6 py-4 bg-surface border-b border-border">
@@ -67,13 +71,16 @@ export function AppHeader() {
 
       <button
         type="button"
-        onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
-        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+        onClick={() => setTheme(upcoming)}
+        // Announces the destination, not the current state: a screen-reader user needs to
+        // know what pressing it does. The visible label already carries the current mode.
+        aria-label={`Theme: ${themeLabel(theme)}. Switch to ${themeLabel(upcoming)}.`}
+        title={`Switch to ${themeLabel(upcoming)}`}
         className="focus-ring flex items-center gap-[7px] rounded-pill border border-border px-3 py-[5px] text-[12px] text-text-muted cursor-pointer hover:bg-surface-2"
       >
         <span className="w-[11px] h-[11px] rounded-full bg-primary" />
         <span className="w-[11px] h-[11px] rounded-full bg-accent -ml-1" />
-        Theme
+        {themeLabel(theme)}
       </button>
     </header>
   )

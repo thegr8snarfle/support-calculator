@@ -117,6 +117,41 @@ State ownership, which is where the original bug actually lived:
 A field can be invalid two ways at once (unparseable draft *and* a validation error); the
 **parse error wins**, since you cannot range-check what you cannot parse.
 
+### Preferences & persistence
+
+User preferences persist between sessions via `src/services/preferences/` (port + adapters,
+mirroring `services/rules`) and `src/features/preferences/` (store, `ThemeProvider`,
+`useTheme`). The theme is the only tenant today.
+
+- **Preferences are UI choices, not user data.** Worksheet input — income, overnights,
+  children — is deliberately **not** persisted. A shared laptop should not silently retain
+  someone's finances. Persisting it is a product decision needing a visible "clear my data"
+  affordance, not a field added to `Preferences`.
+- **Storage is a trust boundary.** `localStorage` is user-editable, so every read goes
+  through `parsePreferences` (Zod) and falls back to defaults — same discipline as
+  `parseRuleSet`. A `version` literal means a future shape is *rejected*, not misread.
+- **Storage must never break the app.** Touching `localStorage` throws when site data is
+  blocked; `setItem` throws on quota (Safari private mode does both). Every access is
+  wrapped, and `createPreferencesRepository()` falls back to in-memory, so callers never
+  branch on availability. Storage is injected as a parameter — inject a fake in tests, don't
+  mock the module.
+- **`preferencesStore` is separate from `worksheetStore`** so `reset()` cannot clear the
+  user's theme along with their input.
+- **Two owners of `data-theme`.** `public/theme-init.js` sets it before first paint;
+  `ThemeProvider` owns it from the first render on. The boot script must stay a **classic,
+  non-deferred, external** script: `type="module"` or `defer` runs it after first paint and
+  silently reintroduces the flash, and an inline script is blocked by the Tauri CSP
+  (`default-src 'self'`, no `script-src`). It cannot import from the bundle, so it duplicates
+  the storage key and resolution rule — `preferencesContract.test.ts` pins them together.
+- **`'system'` is a live deferral, not a stored color.** It resolves against `matchMedia` and
+  keeps following the OS while selected. Only `'light' | 'dark'` are ever written to
+  `data-theme`.
+
+Under Tauri this needs no plugin, no Rust, and no CSP change. Two behaviours to expect
+rather than fix: dev (`http://localhost:3000`) and production (`tauri://localhost`) are
+different origins with separate storage, and the WKWebView store is keyed to the bundle
+`identifier`, so changing it resets preferences.
+
 ### Statute data
 
 Statutory values live in `src/services/rules/data/<jurisdiction>/<year>.json`, not in code —

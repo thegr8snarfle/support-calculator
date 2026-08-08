@@ -18,9 +18,16 @@ Every value is a **CSS custom property** defined in `theme.css`:
 - Light theme -> `:root`
 - Dark theme -> `[data-theme="dark"]`
 
-A future theme service switches themes by setting `data-theme` on `<html>`. When Tailwind
-is added, these map 1:1 into an `@theme` block (e.g. `--color-primary: var(--primary)`), so
-utilities like `bg-primary` / `text-muted` resolve to the same tokens the mockups use.
+The app switches themes by setting `data-theme` on `<html>`. These map 1:1 into Tailwind's
+`@theme` block (e.g. `--color-primary: var(--primary)`), so utilities like `bg-primary` /
+`text-muted` resolve to the same tokens the mockups use.
+
+**The toggle has three states**, not two: `System` (the default, following the OS via
+`prefers-color-scheme`), `Light`, and `Dark`, cycling in that order. The pill keeps its two
+color dots; its label shows the *current* state while the tooltip and accessible name
+announce the *next* one. Only `light` / `dark` are ever written to `data-theme` — `system` is
+resolved before it reaches the DOM, so the two token blocks above remain the only variants a
+mockup needs. The choice persists between sessions.
 
 **Regenerate the PNGs** after editing the HTML/CSS with headless Chrome (see the commands in
 this repo's mockups; `--window-size` controls the captured height, `?theme=dark` on the

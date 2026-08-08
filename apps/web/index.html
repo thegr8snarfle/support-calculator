@@ -5,6 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>support-calculator</title>
+    <!--
+      Applies the saved theme before first paint, so a dark-mode user never sees a light
+      flash. Deliberately a classic, render-blocking script: `type="module"` or `defer`
+      would run it after paint and defeat the purpose, and an inline script would be
+      blocked by the Tauri CSP (`default-src 'self'`). See public/theme-init.js.
+    -->
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

@@ -223,6 +223,8 @@ updated as work lands. Snapshot:
 | Statute data layer (rule sets, validation, MCP-ready port) | — | — | ✅ |
 | State wiring / live-updating estimate | ⬜ | ✅ | ✅ |
 | Worksheet input validation (field errors, frozen estimate) | ✅ | ✅ | ✅ |
+| Persisted user preferences (storage port, Zod boundary) | — | — | ✅ |
+| Theme preference — three-state Light/Dark/System, no flash | ✅ | ✅ | ✅ |
 | Print / Export PDF | ⬜ | ✅ | ⬜ |
 | Multi-state support (additional jurisdictions) | — | — | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
