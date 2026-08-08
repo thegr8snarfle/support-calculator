@@ -194,8 +194,10 @@ now live in **`apps/web/CLAUDE.md`**.
 
 - **Planning:** for multi-file or architectural changes, start in **Plan Mode** and get the
   plan approved before editing.
-- **Plan audit trail:** Do not create plan artifacts unless being explicitly told to do so, 
-  instead just walk through the planning process in the console. However, when creating an artifact:
+- **Plan audit trail:** Do not create plan artifacts unless being explicitly told to do so,
+  instead just walk through the planning process in the console. (Plan Mode may auto-create a
+  scratch file; when it does and no artifact was asked for, fold the content into the console
+  discussion and delete the file.) However, when creating an artifact:
   every plan produced in Plan Mode is saved as its **own file** under
   `plans/`, named `plans/YYYY-MM-DD-<task-slug>.md` (date the plan was written + a kebab-case
   task description, e.g. `plans/2026-08-02-mobile-viewport-overflow-fix.md`). **Never overwrite
@@ -211,6 +213,9 @@ now live in **`apps/web/CLAUDE.md`**.
   the relevant section in the same change rather than leaving stale claims.
 - **Always** only include a succinct description of changes since the last commit if ever asked
   to commit changes to a branch.
+- **Always** comment code paths as they progress, not just function and class level (which should always be typescript
+  comments supporting parameter annotations as well). Comment code paths almost obnoxiously, as it helps developers understand
+  the code, and also AI agents parase and learn the code.
 
 ## Domain & business rules
 
@@ -292,6 +297,12 @@ reference material.
   `EstimateBreakdown` component. The "Print / Export PDF" button is presentational for now.
 - **`src/mocks/`** now seeds the store's default worksheet and gives the unit tests a shared
   realistic input; the domain types it once carried live in `src/types/support.ts`.
+- **Worksheet input is validated** (`src/domain/support/validate.ts` + a `ValidationProvider`
+  context read via `useValidation()`): invalid entries are surfaced with a red border and an
+  alert tooltip plus a summary block, never silently clamped; the estimate **freezes** at its
+  last valid value and is visibly marked stale; and `canAdvance` blocks progression until the
+  worksheet is clean. Bounds come from the rule set, so validation is jurisdiction-agnostic
+  like the engine. See `apps/web/CLAUDE.md` → _Validation_.
 - **Guided-flow navigation is wired** (`src/features/navigation/`): a custom, reducer-backed
   `useStepFlow()` hook (Context provider at the app root) drives Worksheet → Review → Results — the
   header stepper chips, the rail's "Review full worksheet" button, and Review's Back / Edit
@@ -327,6 +338,7 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Statute data layer (rule sets, Zod validation, MCP-ready port) | — | — | ✅ |
 | State wiring / live-updating estimate | ⬜ | ✅ | ✅ |
 | Step gating from validation (`canAdvance`) | — | ✅ | ✅ |
+| Worksheet input validation (field errors, frozen estimate) | ✅ | ✅ | ✅ |
 | Unit tests (Vitest) — engine, data layer, store, navigation | — | — | ✅ |
 | Print / Export PDF | ⬜ | ✅ | ⬜ |
 | Multi-state support (additional jurisdictions) | — | — | ⬜ |

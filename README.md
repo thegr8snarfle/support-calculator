@@ -222,6 +222,7 @@ updated as work lands. Snapshot:
 | Support-calculation engine (C.R.S. §14-10-115, HB 25-1159) | ⬜ | — | ✅ |
 | Statute data layer (rule sets, validation, MCP-ready port) | — | — | ✅ |
 | State wiring / live-updating estimate | ⬜ | ✅ | ✅ |
+| Worksheet input validation (field errors, frozen estimate) | ✅ | ✅ | ✅ |
 | Print / Export PDF | ⬜ | ✅ | ⬜ |
 | Multi-state support (additional jurisdictions) | — | — | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |

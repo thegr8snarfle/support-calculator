@@ -65,11 +65,23 @@ export const useWorksheetStore = create<WorksheetState>((set, get) => ({
       }
     }),
 
+  /**
+   * Record one parent's overnights **exactly as entered** — deliberately unclamped.
+   *
+   * An out-of-range count (900, or 365 opposite another 365) is kept so
+   * `validateWorksheet` can see it and the UI can point at it. Clamping here would make the
+   * field and the store silently disagree, which is the bug this replaced: the user sees
+   * 900, the estimate is computed from 365, and nothing says so. Non-finite values are
+   * still rejected — those are a parse artifact, not something the user can see or fix.
+   */
   setNights: (party, nights) =>
     set((s) => ({
       input: {
         ...s.input,
-        parentingTime: { ...s.input.parentingTime, [party]: Math.max(0, nights) },
+        parentingTime: {
+          ...s.input.parentingTime,
+          [party]: Number.isFinite(nights) ? nights : 0,
+        },
       },
     })),
 

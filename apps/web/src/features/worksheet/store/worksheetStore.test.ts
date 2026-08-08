@@ -34,10 +34,31 @@ describe('input actions', () => {
     expect(useWorksheetStore.getState().input.income.bonus).toEqual({ a: 0, b: 300 })
   })
 
-  it('updates overnights and clamps negatives to zero', () => {
+  it('updates overnights', () => {
     useWorksheetStore.getState().setNights('b', 200)
     expect(useWorksheetStore.getState().input.parentingTime.b).toBe(200)
-    useWorksheetStore.getState().setNights('b', -5)
+  })
+
+  it('keeps an out-of-range overnight count exactly as entered', () => {
+    // Deliberately unclamped: `validateWorksheet` needs to see what the user actually
+    // typed, and clamping here is what previously made the field and the store disagree
+    // silently. Range enforcement is a validation concern, not a storage one.
+    useWorksheetStore.getState().setNights('a', 900)
+    expect(useWorksheetStore.getState().input.parentingTime.a).toBe(900)
+
+    useWorksheetStore.getState().setNights('b', 366)
+    expect(useWorksheetStore.getState().input.parentingTime.b).toBe(366)
+  })
+
+  it('keeps a negative overnight count so it can be reported', () => {
+    useWorksheetStore.getState().setNights('a', -5)
+    expect(useWorksheetStore.getState().input.parentingTime.a).toBe(-5)
+  })
+
+  it('ignores non-finite overnight values', () => {
+    useWorksheetStore.getState().setNights('a', Number.NaN)
+    expect(useWorksheetStore.getState().input.parentingTime.a).toBe(0)
+    useWorksheetStore.getState().setNights('b', Number.POSITIVE_INFINITY)
     expect(useWorksheetStore.getState().input.parentingTime.b).toBe(0)
   })
 

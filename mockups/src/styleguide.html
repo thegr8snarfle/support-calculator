@@ -77,6 +77,19 @@
   .help { display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--surface-2); color:var(--text-muted); font-size:11px; font-weight:700; border:1px solid var(--border); }
   .tip { display:inline-block; background: var(--text); color: var(--surface); font-size:12px; padding:8px 11px; border-radius: var(--r-md); max-width: 220px; box-shadow: var(--shadow-md); position: relative; }
   .tip::after { content:""; position:absolute; left:20px; bottom:-5px; width:10px; height:10px; background: var(--text); transform: rotate(45deg); }
+  /* Error variant of the tooltip: same bubble, alert fill. Carries the message for an
+     invalid field so the inline row height never shifts as errors come and go. */
+  .tip.err { background: var(--alert); color: #fff; font-weight: 500; }
+  .tip.err::after { background: var(--alert); }
+  /* Validation summary — the always-visible counterpart to the tooltip. */
+  .vsum { border: 1px solid var(--alert); background: var(--alert-weak); border-radius: var(--r-lg); padding: 14px 16px; }
+  .vsum h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: var(--alert); }
+  .vsum ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+  .vsum a { color: var(--alert); font-size: 13px; text-decoration: none; }
+  .vsum a:hover { text-decoration: underline; }
+  /* Frozen estimate — figures dim, the notice stays at full contrast. */
+  .stale-note { border-bottom: 1px solid var(--alert); background: var(--alert-weak); color: var(--alert); font-size: 12px; font-weight: 600; padding: 8px 16px; }
+  .stale-figs { opacity: .45; padding: 12px 16px; }
 
   .party-chip { display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:14px; }
   .party-chip::before { content:""; width:10px; height:10px; border-radius:50%; }
@@ -167,8 +180,35 @@
           </div>
         </div>
         <div class="panel">
-          <div class="h3">Error message</div>
-          <div class="fieldwrap"><span class="flabel">Overnights per year</span><input class="field err" value="400" style="width:100%" /><span class="err-msg">Enter a number between 0 and 365.</span></div>
+          <div class="h3">Error tooltip</div>
+          <div class="fieldwrap" style="gap:10px">
+            <span class="flabel">Overnights per year</span>
+            <input class="field err" value="900" style="width:100%" />
+            <span class="tip err">Enter a number between 0 and 365.</span>
+          </div>
+          <div class="cap">Field-level errors ride in an alert tooltip on hover / focus. Always in the DOM so <code>aria-describedby</code> can reach it.</div>
+        </div>
+        <div class="panel">
+          <div class="h3">Validation summary</div>
+          <div class="vsum">
+            <h4>Fix these 2 things before continuing</h4>
+            <ul>
+              <li><a href="#">Overnights add up to 730, not 365. Remove 365 nights from one parent.</a></li>
+              <li><a href="#">Gross monthly income must be a dollar amount of 0 or more.</a></li>
+            </ul>
+          </div>
+          <div class="cap">Always visible, one row per error, each focuses its field — a tooltip alone is unreachable on touch.</div>
+        </div>
+        <div class="panel">
+          <div class="h3">Frozen estimate</div>
+          <div style="border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);overflow:hidden">
+            <div class="stale-note">Waiting on a correction — showing your last complete estimate.</div>
+            <div class="stale-figs">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">Estimated monthly support</div>
+              <div class="num" style="font-family:var(--font-display);font-weight:700;font-size:34px;letter-spacing:-.03em">$1,244<small style="font-size:14px;color:var(--text-muted)">/mo</small></div>
+            </div>
+          </div>
+          <div class="cap">While input is invalid the estimate is held, not recalculated — dimmed so a stale figure is never read as live.</div>
         </div>
         <div class="panel">
           <div class="h3">Segmented toggle</div>

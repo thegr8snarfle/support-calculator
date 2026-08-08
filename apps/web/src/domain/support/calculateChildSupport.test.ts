@@ -70,12 +70,13 @@ describe('calculateChildSupport — sample worksheet', () => {
     expect(e.addOns).toBe(1080)
   })
 
-  it('warns when overnights do not total the parenting year', () => {
-    const e = calculateChildSupport(
-      input({ parentingTime: { a: 200, b: 100 } }),
-      rules,
-    )
-    expect(e.warnings.some((w) => w.includes('300'))).toBe(true)
+  it('does not warn about overnights — that is now a blocking validation error', () => {
+    // Ownership moved to `validateWorksheet`: a total that isn't the parenting year makes
+    // the figure meaningless rather than imprecise (365/365 computes a confident $0), so it
+    // blocks instead of warning, and invalid input never reaches this function at all.
+    // `warnings` is reserved for cases that still produce a usable estimate.
+    const e = calculateChildSupport(input({ parentingTime: { a: 200, b: 100 } }), rules)
+    expect(e.warnings.some((w) => w.includes('300'))).toBe(false)
   })
 })
 

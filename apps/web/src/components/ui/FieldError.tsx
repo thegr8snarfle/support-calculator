@@ -9,6 +9,6 @@ export type FieldErrorProps = {
 /** Short inline error message. States what happened + how to fix it. */
 export function FieldError({ children, className }: FieldErrorProps) {
   return (
-    <span className={cn('block text-[12px] text-alert', className)}>{children}</span>
+    <span className={cn('block text-[14px] text-alert', className)}>{children}</span>
   )
 }

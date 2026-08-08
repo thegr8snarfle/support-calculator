@@ -121,8 +121,30 @@ affordance on non-currency fields (e.g. overnights).
 
 ### Field states
 Default -> `--border`. Focus -> `--primary` + ring. Error -> `--alert` border + `--alert-weak`
-ring + a short message in `--alert` telling the user how to fix it. Disabled -> `--surface-2`
-fill, `--text-subtle` text.
+ring, with the message carried in an **error tooltip** (see Validation below) rather than an
+inline line of text — worksheet inputs sit in a tight two-column grid, and a message that
+appears and disappears inline reflows the row. Disabled -> `--surface-2` fill, `--text-subtle`
+text.
+
+### Validation
+Invalid input is always **surfaced, never silently corrected** — a value quietly clamped to a
+legal one makes the field and the estimate disagree with nothing on screen saying so.
+
+- **Error tooltip** — the field-level message. Same bubble as the help affordance but filled
+  `--alert` with white text, revealed on hover / focus, positioned *below* the field (upward
+  would cover the row label). Always present in the DOM so it can be referenced by
+  `aria-describedby`.
+- **Validation summary** — `--alert` border on `--alert-weak`, above the worksheet, one row
+  per error, each row focusing its field. The tooltip needs hover or focus, so it is
+  effectively invisible on touch and unreachable once scrolled away; this is the counterpart.
+  A cross-field error (overnights not totalling the year) highlights **both** inputs and
+  appears once here.
+- **Frozen estimate** — when input is invalid the results rail keeps the last complete figures
+  rather than recalculating, dims them to 45%, and states why in an `--alert` bar. Progression
+  is disabled at the same time, so the gate is visible rather than a click that does nothing.
+
+Copy follows the Voice rules below: say what happened *and* the fix ("Overnights add up to
+730, not 365. Remove 365 nights from one parent.").
 
 ### Segmented toggle
 Pill track (`--surface-2`) with a raised selected segment (`--surface` + `--shadow-sm`). For

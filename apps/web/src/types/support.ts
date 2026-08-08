@@ -74,8 +74,32 @@ export type SupportEstimate = {
       obligation: number
     }
   >
-  /** Non-fatal problems (e.g. overnights don't total 365) for the UI to surface. */
+  /**
+   * Non-fatal problems the UI surfaces alongside a usable figure — e.g. combined
+   * income above the top of the schedule. Distinct from `ValidationError`, which is
+   * blocking: anything in here still produced a meaningful estimate.
+   */
   warnings: string[]
   /** True when required input is missing, so the UI can show a partial estimate. */
   incomplete: boolean
+}
+
+/**
+ * A **blocking** problem with the worksheet input.
+ *
+ * There is deliberately no `severity` field: a `ValidationError` always blocks. The
+ * informative-but-still-calculable cases live on `SupportEstimate.warnings`, so the two
+ * concepts have exactly one home each and no consumer has to filter by severity.
+ */
+export type ValidationError = {
+  /** Stable identity for the rule that failed, e.g. `'parentingTime.total'`. */
+  id: string
+  /** Plain language: what is wrong *and* how to fix it. */
+  message: string
+  /**
+   * Ids of the inputs to highlight, from `fieldIds` in `domain/support/validate.ts`.
+   * A list rather than a single id so one cross-field rule (overnights not totalling
+   * the year) can light up *both* inputs. Empty means form-level only.
+   */
+  fields: string[]
 }

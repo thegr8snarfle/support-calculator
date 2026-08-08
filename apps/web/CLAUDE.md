@@ -34,7 +34,7 @@ duplicated here.
 
 ## TypeScript / React
 
-- Prefer explicit types on component props and public function signatures.
+- **Always** Prefer explicit types on component props and function signatures, including arrow functions.
 - **Always prefer `type` aliases over `interface`s** (including for component props), unless
   declaration merging is genuinely required. _(This project-specific rule intentionally
   overrides the common "interface for props" convention — do not switch props to
@@ -83,6 +83,39 @@ src/services/rules/   API layer: repository port + swappable adapters
 > feature, but the rules repository is app-level because it is not worksheet-specific —
 > spousal maintenance and other jurisdictions will consume the same port. `src/domain/` is
 > likewise app-level and framework-free.
+
+### Validation
+
+Worksheet input is validated by `src/domain/support/validate.ts` — pure, framework-free, and
+sitting beside the engine as its gate.
+
+- **Surfaced, never silently corrected.** Do not clamp a user's entry to a legal value. A
+  clamped field and the estimate disagree with nothing on screen saying so; that was the
+  original overnights bug. The store keeps exactly what was typed and validation reports it.
+- **Bounds come from the rule set**, never from constants — `rules.yearNights`,
+  `rules.schedule.maxChildren`. Same discipline as the engine.
+- **Errors block; warnings don't.** `ValidationError` has no severity field: everything it
+  returns stops the flow (`canAdvance` requires status `'complete'`). Informative but still
+  calculable conditions belong on `SupportEstimate.warnings` instead, so each concept has one
+  home and no consumer filters by severity.
+- **`validateWorksheet` is called in exactly one place** — `ValidationProvider` — and read
+  everywhere else via `useValidation()`. It runs on every keystroke with many readers, so one
+  provider means one computation per input change. Don't add a second call site.
+- **Invalid input never reaches the engine.** `useSupportEstimate` returns the *last valid*
+  estimate with `stale: true` instead of recalculating, and the UI must mark a stale figure
+  visibly. The engine is total — it returns a number for almost anything — so calling it on
+  nonsense input is exactly how 365/365 produced a confident $0.
+
+State ownership, which is where the original bug actually lived:
+
+| Tier | Holds |
+| --- | --- |
+| `worksheetStore` | raw input + rule set; **no derived figures** |
+| Derived in render | `errors` / `fieldErrors` (context), `estimate`, `stale` |
+| Component state | `useNumericField`'s draft string, and nothing else |
+
+A field can be invalid two ways at once (unparseable draft *and* a validation error); the
+**parse error wins**, since you cannot range-check what you cannot parse.
 
 ### Statute data
 

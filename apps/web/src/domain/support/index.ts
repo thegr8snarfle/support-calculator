@@ -5,6 +5,7 @@
  * statute it implements arrives as data (`SupportRuleSet`) from the rules API layer.
  */
 export { calculateChildSupport } from './calculateChildSupport'
+export { errorsByField, fieldIds, validateWorksheet } from './validate'
 export { adjustedGrossIncome, combinedIncome, incomeShares } from './income'
 export { basicObligation } from './schedule'
 export { parentingTimeCredit, parentingTimeCreditPct } from './parentingTime'

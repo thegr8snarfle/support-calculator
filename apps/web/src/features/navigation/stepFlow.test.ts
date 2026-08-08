@@ -30,10 +30,18 @@ describe('navigation gates', () => {
     expect(stepFlowReducer(state, { type: 'NEXT' }).current).toBe('review')
   })
 
-  it('treats warnings as non-blocking', () => {
-    // "error" means e.g. overnights don't total 365 — the estimate is still useful,
-    // so we surface the warning rather than trapping the user on the worksheet.
-    expect(canAdvance(withWorksheet('error'))).toBe(true)
+  it('blocks advancing while the worksheet has validation errors', () => {
+    // This inverts the original rule. 'error' used to be non-blocking on the theory that
+    // the estimate was still useful — but the case it was written for (overnights not
+    // totalling 365) computes a confident $0, so it is not useful at all. Status now
+    // carries only blocking validation errors; engine warnings never reach it.
+    expect(canAdvance(withWorksheet('error'))).toBe(false)
+    const next = stepFlowReducer(withWorksheet('error'), { type: 'NEXT' })
+    expect(next.current).toBe('worksheet')
+  })
+
+  it('blocks jumping ahead while the worksheet has validation errors', () => {
+    expect(canGoTo(withWorksheet('error'), 'results')).toBe(false)
   })
 
   it('blocks jumping ahead but always allows going back', () => {

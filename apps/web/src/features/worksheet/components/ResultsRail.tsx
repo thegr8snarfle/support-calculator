@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from '../../../components/ui/Button'
+import { cn } from '../../../lib/cn'
 import { EstimateBreakdown } from './EstimateBreakdown'
 import { formatUsd } from '../../../lib/format'
 import type { SupportEstimate } from '../../../types/support'
@@ -17,12 +18,19 @@ export type ResultsRailProps = {
   citation: ReactNode
   /** Advance to the Review step. */
   onReview?: () => void
+  /**
+   * The figures are a **frozen** earlier estimate, held because the worksheet currently has
+   * validation errors. Dims the numbers and blocks progression, so a stale amount is never
+   * read as the live one.
+   */
+  stale?: boolean
 }
 
 /** Sticky results callout. All figures come from the estimate (no math here). */
 export function ResultsRail(props: ResultsRailProps) {
   const {
     estimate, period = '/mo', payer, recipient, nameA, nameB, netLabel, citation, onReview,
+    stale = false,
   } = props
 
   return (
@@ -35,6 +43,19 @@ export function ResultsRail(props: ResultsRailProps) {
         aria-live="polite"
         className="bg-surface border border-border rounded-lg shadow-md overflow-hidden"
       >
+        {/* Announced by the surrounding live region, so a screen-reader user hears that the
+            figure has stopped tracking their input rather than only seeing it fade. */}
+        {stale && (
+          <div className="border-b border-alert bg-alert-weak px-5 py-2 text-[12px] font-semibold text-alert">
+            Waiting on a correction — showing your last complete estimate.
+          </div>
+        )}
+
+        <div
+          // Only the figures dim, not the whole card: the correction notice and the
+          // buttons must stay at full contrast.
+          className={cn('transition-opacity', stale && 'opacity-45')}
+        >
         <div className="px-5 pt-4 text-[12px] font-semibold tracking-[0.08em] uppercase text-text-muted">
           Estimated monthly support
         </div>
@@ -60,8 +81,14 @@ export function ResultsRail(props: ResultsRailProps) {
           />
         </div>
 
+        </div>
+
         <div className="grid gap-2 px-5 pb-5">
-          <Button variant="primary" onClick={onReview}>Review full worksheet</Button>
+          {/* Disabled while stale so the gate in `canAdvance` is visible here rather than
+              silently swallowing the click in the reducer. */}
+          <Button variant="primary" onClick={onReview} disabled={stale}>
+            Review full worksheet
+          </Button>
           <Button variant="ghost">Print / Export PDF</Button>
         </div>
       </div>

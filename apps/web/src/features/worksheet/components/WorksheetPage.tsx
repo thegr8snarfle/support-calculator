@@ -9,12 +9,15 @@ import { ParentingTimeBar } from './ParentingTimeBar'
 import { ResultsRail } from './ResultsRail'
 import { SupportCitation } from './SupportCitation'
 import { CountField, MoneyField } from './WorksheetFields'
+import { ValidationSummary } from './ValidationSummary'
 import { WORKSHEET_SECTIONS } from '../sections'
 import { useStepFlow } from '../../navigation'
 import { useWorksheetStore } from '../store/worksheetStore'
 import { useRules } from '../hooks/useRules'
 import { useSupportEstimate } from '../hooks/useSupportEstimate'
 import { useWorksheetStatus } from '../hooks/useWorksheetStatus'
+import { useValidation } from '../hooks/useValidation'
+import { fieldIds } from '../../../domain/support'
 import { EMPTY_ESTIMATE } from '../estimateDefaults'
 
 /**
@@ -28,7 +31,9 @@ import { EMPTY_ESTIMATE } from '../estimateDefaults'
 export function WorksheetPage() {
   const { next, pendingScroll, clearPendingScroll } = useStepFlow()
   const { rules, status, error } = useRules()
-  const { estimate } = useSupportEstimate()
+  const { estimate, stale } = useSupportEstimate()
+  // Field-level messages, looked up per input; the summary reads the context itself.
+  const { fieldErrors } = useValidation()
   // Publish worksheet validity to the step flow, which gates advancing.
   useWorksheetStatus(estimate)
 
@@ -76,6 +81,8 @@ export function WorksheetPage() {
           <FieldError>{error ?? 'Could not load the support guidelines.'}</FieldError>
         </div>
       )}
+
+      <ValidationSummary />
 
       {estimate && estimate.warnings.length > 0 && (
         <div className="mb-6 flex flex-col gap-1" role="status">
@@ -132,6 +139,8 @@ export function WorksheetPage() {
                     label={`${line.label} — ${nameA}`}
                     value={input.income[line.id]?.a ?? 0}
                     onCommit={(v) => setIncome(line.id, 'a', v)}
+                    fieldId={fieldIds.income(line.id, 'a')}
+                    error={fieldErrors[fieldIds.income(line.id, 'a')]}
                   />
                 }
                 b={
@@ -139,6 +148,8 @@ export function WorksheetPage() {
                     label={`${line.label} — ${nameB}`}
                     value={input.income[line.id]?.b ?? 0}
                     onCommit={(v) => setIncome(line.id, 'b', v)}
+                    fieldId={fieldIds.income(line.id, 'b')}
+                    error={fieldErrors[fieldIds.income(line.id, 'b')]}
                   />
                 }
               />
@@ -163,6 +174,8 @@ export function WorksheetPage() {
                   label={`Overnights per year — ${nameA}`}
                   value={input.parentingTime.a}
                   onCommit={(v) => setNights('a', v)}
+                  fieldId={fieldIds.nights('a')}
+                  error={fieldErrors[fieldIds.nights('a')]}
                 />
               }
               b={
@@ -170,6 +183,8 @@ export function WorksheetPage() {
                   label={`Overnights per year — ${nameB}`}
                   value={input.parentingTime.b}
                   onCommit={(v) => setNights('b', v)}
+                  fieldId={fieldIds.nights('b')}
+                  error={fieldErrors[fieldIds.nights('b')]}
                 />
               }
             />
@@ -200,6 +215,8 @@ export function WorksheetPage() {
                     label={line.label}
                     value={input.addOns[line.id] ?? 0}
                     onCommit={(v) => setAddOn(line.id, v)}
+                    fieldId={fieldIds.addOn(line.id)}
+                    error={fieldErrors[fieldIds.addOn(line.id)]}
                   />
                 }
               />
@@ -211,6 +228,7 @@ export function WorksheetPage() {
         <aside className="lg:sticky lg:top-6">
           <ResultsRail
             estimate={estimate ?? EMPTY_ESTIMATE}
+            stale={stale}
             payer={estimate ? input.parties[estimate.payer].name : nameB}
             recipient={estimate ? input.parties[estimate.recipient].name : nameA}
             nameA={nameA}

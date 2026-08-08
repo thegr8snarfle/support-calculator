@@ -106,3 +106,58 @@ test('non-numeric input is flagged rather than silently zeroed', async ({ page }
   await input.fill('abc')
   await expect(input).toHaveAttribute('aria-invalid', 'true')
 })
+
+test('an out-of-range overnight count is flagged, not silently corrected', async ({ page }) => {
+  const nights = page.getByRole('textbox', { name: 'Overnights per year — Taylor' })
+  await nights.fill('900')
+  await nights.blur()
+
+  // The entry survives: clamping it to 365 would make the field and the estimate disagree
+  // with nothing on screen saying so.
+  await expect(nights).toHaveValue('900')
+  await expect(nights).toHaveAttribute('aria-invalid', 'true')
+
+  // The message is reachable without hovering (it is always in the DOM for a11y).
+  // Filtered by text because HelpTip uses role="tooltip" too.
+  await expect(
+    page.getByRole('tooltip').filter({ hasText: 'between 0 and 365' }),
+  ).toBeAttached()
+
+  // The estimate is frozen and progression is closed.
+  await expect(page.getByText(/Waiting on a correction/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Review full worksheet' })).toBeDisabled()
+})
+
+test('overnights that do not total the year flag BOTH inputs', async ({ page }) => {
+  // Each value is individually legal; only together are they impossible. This is the case
+  // that previously produced a confident $0.
+  const taylor = page.getByRole('textbox', { name: 'Overnights per year — Taylor' })
+  const blake = page.getByRole('textbox', { name: 'Overnights per year — Blake' })
+
+  await setField(page, 'Overnights per year — Taylor', '365')
+  await setField(page, 'Overnights per year — Blake', '365')
+
+  await expect(taylor).toHaveAttribute('aria-invalid', 'true')
+  await expect(blake).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByRole('alert')).toContainText('add up to 730')
+  await expect(page.getByRole('button', { name: 'Review full worksheet' })).toBeDisabled()
+})
+
+test('correcting the overnights clears the errors and reopens the flow', async ({ page }) => {
+  await setField(page, 'Overnights per year — Taylor', '365')
+  await setField(page, 'Overnights per year — Blake', '365')
+  await expect(page.getByRole('button', { name: 'Review full worksheet' })).toBeDisabled()
+
+  await setField(page, 'Overnights per year — Taylor', '219')
+  await setField(page, 'Overnights per year — Blake', '146')
+
+  await expect(
+    page.getByRole('textbox', { name: 'Overnights per year — Taylor' }),
+  ).not.toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByText(/Waiting on a correction/)).toBeHidden()
+
+  const review = page.getByRole('button', { name: 'Review full worksheet' })
+  await expect(review).toBeEnabled()
+  await review.click()
+  await expect(page.getByRole('heading', { name: /review/i }).first()).toBeVisible()
+})

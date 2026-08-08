@@ -1,4 +1,11 @@
-import { AppHeader, WorksheetPage, ReviewPage, ResultsPage, useRules } from './features/worksheet'
+import {
+  AppHeader,
+  WorksheetPage,
+  ReviewPage,
+  ResultsPage,
+  useRules,
+  ValidationProvider,
+} from './features/worksheet'
 import { StepFlowProvider, useStepFlow } from './features/navigation'
 
 /** App shell: header + the active step's page. Reads the current step from the flow. */
@@ -24,8 +31,13 @@ function AppShell() {
 
 function App() {
   return (
+    // ValidationProvider sits inside StepFlowProvider and outside every step page: all
+    // three steps read the estimate, and `useSupportEstimate` is itself a validation
+    // consumer, so the context has to span the whole flow rather than the worksheet alone.
     <StepFlowProvider>
-      <AppShell />
+      <ValidationProvider>
+        <AppShell />
+      </ValidationProvider>
     </StepFlowProvider>
   )
 }

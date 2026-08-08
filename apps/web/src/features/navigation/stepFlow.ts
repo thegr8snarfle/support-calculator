@@ -58,16 +58,24 @@ function shift(current: Step, delta: number): Step {
 /**
  * Whether the flow may move forward from `from`.
  *
- * Advancing past the Worksheet requires it to be filled in — a Review or Results
- * page built from an incomplete worksheet would present a figure that looks
- * authoritative but isn't. `'error'` (e.g. overnights that don't total 365) is
- * deliberately *not* blocking: the estimate is still meaningful and the warning is
- * shown inline, so we surface it rather than trapping the user.
+ * Advancing past the Worksheet requires it to be both filled in and valid — a Review or
+ * Results page built from either an incomplete or an invalid worksheet presents a figure
+ * that looks authoritative but isn't.
+ *
+ * `'error'` **blocks**. It previously did not, on the reasoning that the estimate was still
+ * meaningful and an inline warning was kinder than trapping the user. That reasoning was
+ * built around overnights not totalling 365 — which turned out not to be a warning at all:
+ * 365 and 365 computes a confident $0. Status now carries only blocking validation errors
+ * (engine warnings no longer reach it), so nothing merely informative is caught here.
  *
  * Moving backward is always allowed.
+ *
+ * @param state - Current flow state.
+ * @param from - Step to advance from; defaults to the current step.
+ * @returns Whether progression is permitted.
  */
 export function canAdvance(state: StepFlowState, from: Step = state.current): boolean {
-  if (from === 'worksheet') return state.steps.worksheet.status !== 'incomplete'
+  if (from === 'worksheet') return state.steps.worksheet.status === 'complete'
   return true
 }
 

@@ -83,14 +83,12 @@ export function calculateChildSupport(
     )
   }
 
-  // Overnights should total the parenting year; the statute averages across children.
+  // Overnights are *not* checked here. A total that isn't the parenting year is a blocking
+  // `ValidationError` (see `domain/support/validate.ts`) rather than a warning, because the
+  // resulting figure is meaningless rather than merely imprecise — 365/365 computes a
+  // confident $0. Invalid input never reaches this function, so there is nothing to warn
+  // about; `warnings` is reserved for cases that still produce a usable estimate.
   const nights = input.parentingTime
-  const totalNights = nights.a + nights.b
-  if (totalNights !== rules.yearNights) {
-    warnings.push(
-      `Overnights total ${totalNights}, not ${rules.yearNights}. Adjust so they add up.`,
-    )
-  }
 
   const shares = incomeShares(agi)
   const basic = basicObligation(combined, children, rules)
