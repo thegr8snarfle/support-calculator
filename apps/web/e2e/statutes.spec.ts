@@ -32,9 +32,13 @@ test('the worksheet shows the active statute version on load', async ({ page }) 
 test('downloads a statute document as a PDF', async ({ page }) => {
   await page.getByRole('button', { name: 'View statute source documents' }).click()
 
+  // The download service (`src/services/downloads`) fetches the file and clicks a
+  // script-created `<a download>` on a blob URL rather than a plain anchor — Tauri's
+  // webview treats a plain `download` attribute as a silent no-op, so this must work the
+  // same way in a real browser too. See `browserDownloadService.ts`.
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('link', { name: 'Download PDF' }).first().click(),
+    page.getByRole('button', { name: 'Download PDF' }).first().click(),
   ])
   expect(download.suggestedFilename()).toMatch(/\.pdf$/)
 })

@@ -1,8 +1,12 @@
+import { useActionState } from 'react'
 import { Card } from '../../../components/ui/Card'
 import { Chip } from '../../../components/ui/Chip'
+import { Button } from '../../../components/ui/Button'
 import { LinkButton } from '../../../components/ui/LinkButton'
+import { FieldError } from '../../../components/ui/FieldError'
 import { formatIsoDateLong } from '../../../lib/format'
 import { humanizeCitationTopic } from '../citationTopicLabels'
+import { defaultDownloadService, type DownloadService } from '../../../services/downloads'
 import type { StatuteDocument } from '../../../types/statutes'
 
 const ROLE_LABEL: Record<StatuteDocument['role'], string> = {
@@ -14,10 +18,37 @@ export type StatuteDocumentCardProps = {
   document: StatuteDocument
   /** Live citation strings from the loaded rule set, keyed by topic — undefined while rules are loading. */
   citations?: Record<string, string>
+  /** Injected for tests; defaults to the runtime-appropriate (browser vs. Tauri) adapter. */
+  downloadService?: DownloadService
 }
 
-/** One curated statute document: what it is, what it feeds in the calculation, and a download. */
-export function StatuteDocumentCard({ document, citations }: StatuteDocumentCardProps) {
+type DownloadActionState = { error: string | null }
+
+/**
+ * One curated statute document: what it is, what it feeds in the calculation, and a
+ * download.
+ *
+ * The download is a button, not a plain `<a download>` — Tauri's webview has no download
+ * manager, so that attribute is a silent no-op there. `downloadService` fetches the bytes and
+ * saves them the right way for the current runtime (see `services/downloads`).
+ */
+export function StatuteDocumentCard({
+  document,
+  citations,
+  downloadService = defaultDownloadService,
+}: StatuteDocumentCardProps) {
+  const [downloadState, dispatchDownload, isDownloading] = useActionState(
+    async (): Promise<DownloadActionState> => {
+      const outcome = await downloadService.downloadFile({
+        url: document.file.path,
+        filename: document.file.filename,
+        mimeType: document.file.mimeType,
+      })
+      return outcome.status === 'error' ? { error: outcome.message } : { error: null }
+    },
+    { error: null } satisfies DownloadActionState,
+  )
+
   return (
     <Card>
       <div className="flex items-start justify-between gap-3">
@@ -52,17 +83,20 @@ export function StatuteDocumentCard({ document, citations }: StatuteDocumentCard
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <LinkButton
-          variant="secondary"
-          href={document.file.path}
-          download={document.file.filename}
-        >
-          Download PDF
-        </LinkButton>
+        {/* `action` (not `onClick`) so React wraps the dispatch in a transition itself —
+            calling `dispatchDownload()` from a plain onClick logs a dev warning and leaves
+            `isDownloading` unreliable. `className="contents"` keeps the <form> from
+            disrupting the flex row it sits in. */}
+        <form action={dispatchDownload} className="contents">
+          <Button type="submit" variant="secondary" disabled={isDownloading}>
+            {isDownloading ? 'Downloading…' : 'Download PDF'}
+          </Button>
+        </form>
         <LinkButton variant="ghost" href={document.source.url} target="_blank" rel="noopener noreferrer">
           View source
         </LinkButton>
       </div>
+      {downloadState.error && <FieldError className="mt-2">{downloadState.error}</FieldError>}
     </Card>
   )
 }
