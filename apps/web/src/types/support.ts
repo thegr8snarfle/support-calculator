@@ -10,6 +10,24 @@ import type { Party } from './common'
 /** An amount collected for each party, keyed by the rule set's line id. */
 export type PartyAmounts = Record<Party, number>
 
+/**
+ * One shared monthly cost, plus who actually carries the bill.
+ *
+ * The amount and its carrier are **one fact**, kept in one object rather than in a parallel
+ * `addOnPaidBy` map — two maps keyed by the same line id would eventually desync (an amount
+ * cleared without its attribution, an attribution left on a deleted line).
+ *
+ * `paidBy` absent means *unattributed*, which the engine treats as "carried by the recipient
+ * of support" — the assumption the calculation has always made implicitly. See
+ * `calculateChildSupport` for why that is the only non-circular reading of "unattributed".
+ */
+export type AddOnEntry = {
+  /** Monthly amount in whole dollars. */
+  amount: number
+  /** Who carries this line in full. Absent = unattributed. */
+  paidBy?: Party
+}
+
 /** Everything the worksheet collects — the calculation engine's input. */
 export type WorksheetInput = {
   parties: Record<Party, { name: string }>
@@ -19,7 +37,7 @@ export type WorksheetInput = {
   /** Overnights per year with each parent (should total `yearNights`). */
   parentingTime: Record<Party, number>
   /** Shared costs keyed by `AddOnLineSpec.id` (monthly, whole dollars). */
-  addOns: Record<string, number>
+  addOns: Record<string, AddOnEntry>
 }
 
 /** Which statutory path produced the obligation, so the UI can explain itself. */
@@ -71,6 +89,16 @@ export type SupportEstimate = {
       parentingTimeCreditPct: number
       parentingTimeCredit: number
       shareOfAddOns: number
+      /**
+       * Total of the add-on lines this parent carries in full — what they hand to the
+       * childcare provider or the insurer each month, not what they owe of the pool.
+       */
+      addOnsPaid: number
+      /**
+       * How much {@link addOnsPaid} removed from this parent's transfer. Non-zero only for
+       * the payer: a credit reduces a payment, and the recipient makes none.
+       */
+      addOnCredit: number
       obligation: number
     }
   >

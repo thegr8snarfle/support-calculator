@@ -15,13 +15,23 @@ export type FieldRowProps = {
   b?: ReactNode
   /** Single input spanning both party columns (e.g. shared costs). */
   wide?: ReactNode
+  /**
+   * Secondary control on its own full-width line beneath the row (e.g. the "who pays this"
+   * toggle on a shared cost).
+   *
+   * A second row rather than another column because the `wide` slot is only ~13rem at
+   * 390px — an amount field and a three-way toggle side by side would overflow the phone
+   * viewport that `apps/web/CLAUDE.md` calls out.
+   */
+  meta?: ReactNode
 }
 
 /**
  * One labeled worksheet row on the shared party grid. Either provide `a` + `b`
- * for the two-party columns, or `wide` for a single input spanning both.
+ * for the two-party columns, or `wide` for a single input spanning both; `meta` adds a
+ * full-width second line under either arrangement.
  */
-export function FieldRow({ label, hint, divider = true, a, b, wide }: FieldRowProps) {
+export function FieldRow({ label, hint, divider = true, a, b, wide, meta }: FieldRowProps) {
   return (
     <div
       className={cn(
@@ -42,6 +52,8 @@ export function FieldRow({ label, hint, divider = true, a, b, wide }: FieldRowPr
           <div>{b}</div>
         </>
       )}
+      {/* Spans every column so the control is free to wrap on a narrow viewport. */}
+      {meta && <div className="col-start-1 col-span-3 mt-2">{meta}</div>}
     </div>
   )
 }

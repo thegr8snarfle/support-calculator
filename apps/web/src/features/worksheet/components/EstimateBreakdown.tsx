@@ -29,6 +29,9 @@ export function EstimateBreakdown({
   size = 'compact',
 }: EstimateBreakdownProps) {
   const totalText = size === 'full' ? 'text-[14px]' : 'text-[13px]'
+  // Only the payer's credit moves the transfer, so only theirs belongs in this breakdown.
+  const credit = e.perParty[e.payer].addOnCredit
+  const payerName = e.payer === 'a' ? nameA : nameB
   return (
     <>
       <Row label="Combined income" value={formatUsd(e.combinedIncome)} />
@@ -51,6 +54,15 @@ export function EstimateBreakdown({
         valueClass="text-positive"
       />
       <Row label="Childcare + health + medical" value={formatUsd(e.addOns)} />
+      {/* Shown only when the payer carries a bill themselves. A permanent $0 row would
+          suggest a credit is expected on every worksheet, when most have none. */}
+      {credit > 0 && (
+        <Row
+          label={`Paid directly by ${payerName}`}
+          value={`−${formatUsd(credit)}`}
+          valueClass="text-positive"
+        />
+      )}
 
       <div
         className={`flex justify-between items-center border-t border-border mt-1.5 pt-3 gap-3 ${totalText}`}

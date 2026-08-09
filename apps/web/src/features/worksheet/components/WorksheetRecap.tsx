@@ -28,6 +28,12 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
   const incomeLines = rules?.incomeLines ?? []
   const addOnLines = rules?.addOnLines ?? []
 
+  // Carries the documentation/agreement advisory onto Review *and* the printable Results
+  // page — the latter being the artefact a user is most likely to take to a hearing.
+  const anyAttributed = Object.values(addOns).some(
+    (entry) => entry.paidBy !== undefined && entry.amount > 0,
+  )
+
   const edit = (sectionId: string, label: string) =>
     onEdit ? <EditLink label={label} onClick={() => onEdit(sectionId)} /> : undefined
 
@@ -73,15 +79,39 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
 
       {/* 4 · Monthly shared costs */}
       <RecapCard step={4} title="Monthly shared costs" action={edit(WORKSHEET_SECTIONS.costs, 'shared costs')}>
-        {addOnLines.map((line, i) => (
-          <FieldRow
-            key={line.id}
-            label={line.label}
-            hint={line.hint}
-            divider={i !== 0}
-            wide={<RecapValue>{formatUsd(addOns[line.id] ?? 0)}</RecapValue>}
-          />
-        ))}
+        {addOnLines.map((line, i) => {
+          const entry = addOns[line.id]
+          // Only a line with money on it can be carried, matching the engine's rule that a
+          // $0 attribution is not a credit.
+          const carrier =
+            entry?.paidBy !== undefined && entry.amount > 0
+              ? parties[entry.paidBy].name
+              : null
+          return (
+            <FieldRow
+              key={line.id}
+              label={line.label}
+              hint={line.hint}
+              divider={i !== 0}
+              wide={
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {carrier && (
+                    <span className="rounded-pill bg-primary-weak px-2 py-0.5 text-[11px] font-semibold text-primary">
+                      Paid by {carrier}
+                    </span>
+                  )}
+                  <RecapValue>{formatUsd(entry?.amount ?? 0)}</RecapValue>
+                </div>
+              }
+            />
+          )
+        })}
+        {anyAttributed && (
+          <p className="mt-3 text-[12px] text-text-muted" role="note">
+            Costs marked as paid by one parent are credited to them in full, and must be
+            documented and agreed by both parents or ordered by the court.
+          </p>
+        )}
       </RecapCard>
     </>
   )

@@ -5,6 +5,7 @@ import { PartyHeader } from '../../../components/ui/PartyHeader'
 import { NumberStepper } from '../../../components/ui/NumberStepper'
 import { HelpTip } from '../../../components/ui/HelpTip'
 import { FieldError } from '../../../components/ui/FieldError'
+import { AddOnPayerToggle } from './AddOnPayerToggle'
 import { ParentingTimeBar } from './ParentingTimeBar'
 import { ResultsRail } from './ResultsRail'
 import { SupportCitation } from './SupportCitation'
@@ -42,9 +43,17 @@ export function WorksheetPage() {
   const setIncome = useWorksheetStore((s) => s.setIncome)
   const setNights = useWorksheetStore((s) => s.setNights)
   const setAddOn = useWorksheetStore((s) => s.setAddOn)
+  const setAddOnPayer = useWorksheetStore((s) => s.setAddOnPayer)
 
   const nameA = input.parties.a.name
   const nameB = input.parties.b.name
+
+  // Drives the standing advisory in section 4. Read from the input rather than from the
+  // estimate's warnings so it still shows while the estimate is stale or the rules are
+  // still loading — the advice is about what the user typed, not about the figure.
+  const anyAttributed = Object.values(input.addOns).some(
+    (entry) => entry.paidBy !== undefined && entry.amount > 0,
+  )
 
   // Honor an "Edit" jump from Review: scroll the requested section into view once
   // this page has rendered, then move focus to it and clear the request.
@@ -202,25 +211,52 @@ export function WorksheetPage() {
             id={WORKSHEET_SECTIONS.costs}
             step={4}
             title="Monthly shared costs"
-            hint="Added to the obligation and split by income share."
+            hint="Split by income share. If one parent pays a bill in full, mark it — they get credited the whole amount."
           >
-            {(rules?.addOnLines ?? []).map((line, i) => (
-              <FieldRow
-                key={line.id}
-                label={line.label}
-                hint={line.hint}
-                divider={i !== 0}
-                wide={
-                  <MoneyField
-                    label={line.label}
-                    value={input.addOns[line.id] ?? 0}
-                    onCommit={(v) => setAddOn(line.id, v)}
-                    fieldId={fieldIds.addOn(line.id)}
-                    error={fieldErrors[fieldIds.addOn(line.id)]}
-                  />
-                }
-              />
-            ))}
+            {/* Deliberately no `PartyHeader` here, unlike sections 2 and 3. Those have two
+                aligned party columns for the header to label; a shared cost is one `wide`
+                field, so party dots above it would promise a column alignment that does not
+                exist. The "Paid by" toggle names both parents itself. */}
+            {(rules?.addOnLines ?? []).map((line, i) => {
+              const entry = input.addOns[line.id]
+              return (
+                <FieldRow
+                  key={line.id}
+                  label={line.label}
+                  hint={line.hint}
+                  divider={i !== 0}
+                  wide={
+                    <MoneyField
+                      label={line.label}
+                      value={entry?.amount ?? 0}
+                      onCommit={(v) => setAddOn(line.id, v)}
+                      fieldId={fieldIds.addOn(line.id)}
+                      error={fieldErrors[fieldIds.addOn(line.id)]}
+                    />
+                  }
+                  meta={
+                    <AddOnPayerToggle
+                      lineLabel={line.label}
+                      nameA={nameA}
+                      nameB={nameB}
+                      value={entry?.paidBy}
+                      onChange={(party) => setAddOnPayer(line.id, party)}
+                      error={fieldErrors[fieldIds.addOnPayer(line.id)]}
+                    />
+                  }
+                />
+              )
+            })}
+            {anyAttributed && (
+              <p
+                className="mt-4 rounded-md border border-border bg-surface-2 px-3 py-2 text-[12px] text-text-muted"
+                role="note"
+              >
+                Costs marked as paid by one parent are credited to them in full. A court
+                will expect documentation, and the other parent&rsquo;s agreement or a
+                judge&rsquo;s order.
+              </p>
+            )}
           </Card>
         </div>
 

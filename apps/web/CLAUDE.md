@@ -84,6 +84,30 @@ src/services/rules/   API layer: repository port + swappable adapters
 > spousal maintenance and other jurisdictions will consume the same port. `src/domain/` is
 > likewise app-level and framework-free.
 
+### Add-on credits
+
+A shared cost (`WorksheetInput.addOns`) carries **who pays it** alongside the amount, as one
+`AddOnEntry` rather than a parallel `addOnPaidBy` map — two maps keyed by the same line id
+desync. `paidBy` absent means shared.
+
+- **Pooled obligation, full credit.** An attributed line stays in the pool and both parents
+  still owe their income share of it; the parent who carries the bill is credited the **full**
+  monthly amount off their transfer (`C.R.S. §14-10-115(9)–(10)`). $2,000 on a 60/40 split with
+  a $250 premium carried by the payer → a $950 transfer, so their total outlay is still $1,200.
+  A pro-rata credit would be wrong and is the easy mistake to make here.
+- **Unattributed means "carried by the recipient"** — the assumption the engine always made
+  implicitly, now named. Direction is decided from `basicNet` *before* add-ons enter, which is
+  what keeps "the recipient" non-circular and means attribution can never flip who pays whom.
+- **Credits apply after the caps.** The caps limit the *obligation*; the credit is money
+  already paid against it. Reversing the order lets the cap swallow the credit and charges the
+  payer twice.
+- **Floored at $0, with the excess named in a warning.** The direction of payment never
+  reverses. The discarded overage is exactly what gets litigated, so `Math.max(0, net)` alone
+  would hide it.
+- **Attribution raises an advisory warning, not a `ValidationError`.** It needs documentation
+  and agreement, which is not something the user can fix by editing a field — gating
+  progression on it would be a dead end. Only "a payer named on a $0 line" blocks.
+
 ### Validation
 
 Worksheet input is validated by `src/domain/support/validate.ts` — pure, framework-free, and

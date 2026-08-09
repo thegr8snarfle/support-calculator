@@ -13,14 +13,14 @@ import { useSupportEstimate } from './useSupportEstimate'
 import { ValidationProvider } from '../ValidationProvider'
 import { useWorksheetStore } from '../store/worksheetStore'
 import { createStaticRulesRepository } from '../../../services/rules/staticRulesRepository'
-import { SAMPLE_WORKSHEET } from '../../../mocks/supportFixtures'
+import { DEFAULT_INPUT } from '../../../mocks/supportFixtures'
 
 const initial = useWorksheetStore.getState()
 
 beforeEach(() => {
   useWorksheetStore.setState({
     ...initial,
-    input: structuredClone(SAMPLE_WORKSHEET),
+    input: structuredClone(DEFAULT_INPUT),
     rules: null,
     status: 'idle',
     error: null,

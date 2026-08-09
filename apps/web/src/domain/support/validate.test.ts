@@ -8,7 +8,7 @@
  */
 import { beforeAll, describe, expect, it } from 'vitest'
 import { errorsByField, fieldIds, validateWorksheet } from './validate'
-import { SAMPLE_WORKSHEET } from '../../mocks/supportFixtures'
+import { DEFAULT_INPUT } from '../../mocks/supportFixtures'
 import { createStaticRulesRepository } from '../../services/rules/staticRulesRepository'
 import type { SupportRuleSet } from '../../types/rules'
 import type { ValidationError, WorksheetInput } from '../../types/support'
@@ -21,7 +21,7 @@ beforeAll(async () => {
 
 /** A valid worksheet, with the given fields overridden. */
 function worksheet(patch: Partial<WorksheetInput> = {}): WorksheetInput {
-  return { ...structuredClone(SAMPLE_WORKSHEET), ...patch }
+  return { ...structuredClone(DEFAULT_INPUT), ...patch }
 }
 
 /** Ids of the errors returned, for concise assertions. */
@@ -138,9 +138,39 @@ describe('validateWorksheet', () => {
     it('rejects a negative add-on', () => {
       const input = worksheet()
       const lineId = rules.addOnLines[0].id
-      input.addOns[lineId] = -1
+      input.addOns[lineId] = { amount: -1 }
       const errors = validateWorksheet(input, rules)
       expect(errors[0].fields).toEqual([fieldIds.addOn(lineId)])
+    })
+
+    it('rejects a payer named on a line with no amount', () => {
+      // A contradiction the user can actually resolve, so it blocks — unlike the
+      // documentation advisory, which is a warning because there is nothing to edit.
+      const input = worksheet()
+      const lineId = rules.addOnLines[0].id
+      input.addOns[lineId] = { amount: 0, paidBy: 'b' }
+      const errors = validateWorksheet(input, rules)
+      expect(errors).toHaveLength(1)
+      expect(errors[0].id).toBe(`addOns.${lineId}.payerWithoutAmount`)
+      // Highlights both the amount and the toggle: either one is a valid fix.
+      expect(errors[0].fields).toEqual([fieldIds.addOn(lineId), fieldIds.addOnPayer(lineId)])
+    })
+
+    it('accepts an attributed line that has an amount', () => {
+      const input = worksheet()
+      const lineId = rules.addOnLines[0].id
+      input.addOns[lineId] = { amount: 250, paidBy: 'a' }
+      expect(validateWorksheet(input, rules)).toEqual([])
+    })
+
+    it('reports only the amount error when an attributed line is also unparseable', () => {
+      // Two errors on one row would compete for the same tooltip; fix the number first.
+      const input = worksheet()
+      const lineId = rules.addOnLines[0].id
+      input.addOns[lineId] = { amount: Number.NaN, paidBy: 'b' }
+      const errors = validateWorksheet(input, rules)
+      expect(errors).toHaveLength(1)
+      expect(errors[0].id).toBe(`addOns.${lineId}.invalid`)
     })
 
     it('treats an unentered line as valid, not invalid', () => {

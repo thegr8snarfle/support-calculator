@@ -15,26 +15,29 @@ import type { WorksheetInput } from '../types/support'
 export const SUPPORT_STATUTE = 'C.R.S. §14-10-115'
 
 /** Example worksheet inputs (mirrors mockups/src/worksheet.html). */
-export const SAMPLE_WORKSHEET: WorksheetInput = {
-  parties: { a: { name: 'Taylor' }, b: { name: 'Blake' } },
-  childrenCount: 2,
+export const DEFAULT_INPUT: WorksheetInput = {
+  parties: { a: { name: 'Asshole' }, b: { name: 'Austin' } },
+  childrenCount: 1,
   income: {
-    gross: { a: 4800, b: 6500 },
+    gross: { a: 8300, b: 15000 },
     selfEmployment: { a: 0, b: 0 },
     maintenance: { a: 0, b: 0 },
-    otherChildren: { a: 0, b: 450 },
+    otherChildren: { a: 0, b: 0 },
   },
-  parentingTime: { a: 219, b: 146 },
+  parentingTime: { a: 182, b: 183 },
+  // Left unattributed: the sample is the app's first impression, and pre-marking a parent
+  // as carrying a bill would put an unearned legal assertion (and its advisory warning) on
+  // screen before the user has entered anything.
   addOns: {
-    childcare: 780,
-    healthInsurance: 240,
-    extraordinaryMedical: 60,
+    childcare: { amount: 750 },
+    healthInsurance: { amount: 200 },
+    extraordinaryMedical: { amount: 0 },
   },
 }
 
 /** A minimal blank worksheet — used by "start over" and by tests needing a clean slate. */
 export const EMPTY_WORKSHEET: WorksheetInput = {
-  parties: { a: { name: 'Parent A' }, b: { name: 'Parent B' } },
+  parties: { a: { name: 'Asshole' }, b: { name: 'Austin' } },
   childrenCount: 1,
   income: {},
   parentingTime: { a: 182, b: 183 },

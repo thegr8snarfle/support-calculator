@@ -18,7 +18,7 @@ import {
   defaultRulesRepository,
   type RulesRepository,
 } from '../../../services/rules'
-import { SAMPLE_WORKSHEET } from '../../../mocks/supportFixtures'
+import { DEFAULT_INPUT } from '../../../mocks/supportFixtures'
 
 export type RulesStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -33,12 +33,13 @@ export type WorksheetState = {
   setIncome: (lineId: string, party: Party, amount: number) => void
   setNights: (party: Party, nights: number) => void
   setAddOn: (lineId: string, amount: number) => void
+  setAddOnPayer: (lineId: string, party?: Party) => void
   reset: (to?: WorksheetInput) => void
   loadRules: (repo?: RulesRepository, jurisdiction?: string) => Promise<void>
 }
 
 /** Seeded with the example worksheet so the app has something to show immediately. */
-const INITIAL_INPUT: WorksheetInput = structuredClone(SAMPLE_WORKSHEET)
+const INITIAL_INPUT: WorksheetInput = structuredClone(DEFAULT_INPUT)
 
 export const useWorksheetStore = create<WorksheetState>((set, get) => ({
   input: INITIAL_INPUT,
@@ -85,10 +86,33 @@ export const useWorksheetStore = create<WorksheetState>((set, get) => ({
       },
     })),
 
+  /** Set one shared-cost amount, preserving any attribution already on the line. */
   setAddOn: (lineId, amount) =>
-    set((s) => ({
-      input: { ...s.input, addOns: { ...s.input.addOns, [lineId]: amount } },
-    })),
+    set((s) => {
+      const entry = s.input.addOns[lineId]
+      return {
+        input: {
+          ...s.input,
+          addOns: { ...s.input.addOns, [lineId]: { ...entry, amount } },
+        },
+      }
+    }),
+
+  /**
+   * Record which parent carries a shared-cost line in full.
+   *
+   * @param lineId - `AddOnLineSpec.id` from the rule set.
+   * @param party - The carrying parent. **Omit to clear** the attribution back to shared;
+   *   the key is deleted rather than set to `undefined` so the stored object matches the
+   *   optional-property type exactly and never serialises a dangling `paidBy` key.
+   */
+  setAddOnPayer: (lineId, party) =>
+    set((s) => {
+      const entry = s.input.addOns[lineId] ?? { amount: 0 }
+      const next = { ...entry, paidBy: party }
+      if (party === undefined) delete next.paidBy
+      return { input: { ...s.input, addOns: { ...s.input.addOns, [lineId]: next } } }
+    }),
 
   reset: (to = INITIAL_INPUT) => set({ input: structuredClone(to) }),
 

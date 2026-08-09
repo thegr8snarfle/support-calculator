@@ -214,6 +214,7 @@ updated as work lands. Snapshot:
 | Columbine design system & theme | ✅ | ✅ | — |
 | Reusable UI component library | ✅ | ✅ | — |
 | Child-support worksheet (income, parenting time, shared costs) | ✅ | ✅ | ✅ |
+| Add-on credits (shared cost paid in full by one parent) | ⬜ | ✅ | ✅ |
 | Results rail (estimate breakdown) | ✅ | ✅ | ✅ |
 | Review step (grouped recap, Edit links) | ⬜ | ✅ | ✅ |
 | Guided-flow navigation (Worksheet → Review → Results, `useStepFlow`) | — | ✅ | ✅ |

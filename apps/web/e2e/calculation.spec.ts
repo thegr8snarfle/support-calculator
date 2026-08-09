@@ -161,3 +161,60 @@ test('correcting the overnights clears the errors and reopens the flow', async (
   await review.click()
   await expect(page.getByRole('heading', { name: /review/i }).first()).toBeVisible()
 })
+
+/**
+ * Add-on credits: marking a shared cost as paid by one parent credits them the **full**
+ * monthly amount, not their pro-rata share.
+ */
+test('crediting an add-on to the payer drops the estimate by the full amount', async ({
+  page,
+}) => {
+  const before = await railAmount(page)
+
+  // The sample worksheet has Blake paying and a $240 health-insurance line.
+  await page.getByRole('radiogroup', { name: /Who pays Children's health insurance/i }).getByRole('radio', { name: 'Blake' }).click()
+
+  await expect.poll(() => railAmount(page)).toBe(before - 240)
+
+  // The breakdown names the credit rather than silently shrinking the total.
+  await expect(page.getByText(/Paid directly by Blake/i)).toBeVisible()
+
+  // And the advisory about documentation appears once the line is attributed.
+  await expect(page.getByText(/documentation/i)).toBeVisible()
+})
+
+test('an add-on credit is keyboard-operable and carries through to Results', async ({
+  page,
+}) => {
+  const group = page.getByRole('radiogroup', { name: /Who pays Children's health insurance/i })
+  // Roving focus: the group is one tab stop, arrows select within it.
+  await group.getByRole('radio', { name: 'Shared' }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(group.getByRole('radio', { name: 'Taylor' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  )
+  await page.keyboard.press('ArrowRight')
+  await expect(group.getByRole('radio', { name: 'Blake' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  )
+
+  await page.getByRole('button', { name: 'Review full worksheet' }).click()
+  await expect(page.getByText(/Paid by Blake/i).first()).toBeVisible()
+
+  await page.getByRole('button', { name: /See full results/i }).click()
+  await expect(page.getByText(/Paid by Blake/i).first()).toBeVisible()
+})
+
+test('the shared-costs section does not overflow a 390px viewport', async ({ page }) => {
+  // The "paid by" toggle adds a second row to each cost line; the phone viewport called
+  // out in apps/web/CLAUDE.md is where a fixed-width control would first break.
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('radiogroup', { name: /Who pays Work-related childcare/i }).first().waitFor()
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  expect(overflow).toBe(0)
+})

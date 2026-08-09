@@ -297,6 +297,16 @@ reference material.
   `EstimateBreakdown` component. The "Print / Export PDF" button is presentational for now.
 - **`src/mocks/`** now seeds the store's default worksheet and gives the unit tests a shared
   realistic input; the domain types it once carried live in `src/types/support.ts`.
+- **Shared costs can be attributed to one parent** (_add-on credits_,
+  `C.R.S. §14-10-115(9)–(10)`). Section 4 gains a "Paid by" toggle per line: the cost stays
+  pooled and both parents owe their income share, but the parent who carries the bill is
+  credited the **full** monthly amount off their transfer. This also fixed a live bug — the
+  engine previously added the payer's share of every add-on and never subtracted anything,
+  silently assuming the *recipient* paid every bill and charging a payer who carried one
+  twice. That assumption is now the explicit, tested meaning of an unattributed line, so
+  existing worksheets calculate exactly as before. Credits apply after the statutory caps,
+  floor at $0 (the direction of payment never reverses) and surface the excess as a warning.
+  See `apps/web/CLAUDE.md` → _Add-on credits_.
 - **Worksheet input is validated** (`src/domain/support/validate.ts` + a `ValidationProvider`
   context read via `useValidation()`): invalid entries are surfaced with a red border and an
   alert tooltip plus a summary block, never silently clamped; the estimate **freezes** at its
@@ -339,6 +349,7 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Child-support worksheet — monthly income (both parties) | ✅ | ✅ | ✅ |
 | Child-support worksheet — parenting time + balance bar | ✅ | ✅ | ✅ |
 | Child-support worksheet — monthly shared costs | ✅ | ✅ | ✅ |
+| Add-on credits (shared cost paid in full by one parent) | ⬜ | ✅ | ✅ |
 | Results rail (sticky estimate breakdown) | ✅ | ✅ | ✅ |
 | Review step (grouped recap, per-section Edit links) | ⬜ | ✅ | ✅ |
 | Detailed results / printable summary (Results step) | ⬜ | ✅ | ✅ |

@@ -44,6 +44,11 @@ export const fieldIds = {
    * @param lineId - `AddOnLineSpec.id` from the rule set (e.g. `'childcare'`).
    */
   addOn: (lineId: string): string => `addOns.${lineId}`,
+  /**
+   * The "who carries this" toggle on one shared-cost line.
+   * @param lineId - `AddOnLineSpec.id` from the rule set (e.g. `'childcare'`).
+   */
+  addOnPayer: (lineId: string): string => `addOns.${lineId}.paidBy`,
 } as const
 
 /** Parties in the order they appear on the worksheet, so errors come back left-to-right. */
@@ -160,15 +165,31 @@ export function validateWorksheet(
 
   // --- Add-ons ------------------------------------------------------------------
   for (const line of rules.addOnLines) {
-    const amount = input.addOns[line.id]
+    const entry = input.addOns[line.id]
     // Same as income: absent means "not entered", which is valid.
-    if (amount === undefined) continue
+    if (entry === undefined) continue
 
-    if (!isNonNegativeAmount(amount)) {
+    if (!isNonNegativeAmount(entry.amount)) {
       errors.push({
         id: `addOns.${line.id}.invalid`,
         message: `${line.label} must be a dollar amount of 0 or more.`,
         fields: [fieldIds.addOn(line.id)],
+      })
+      // An attribution on an unparseable amount is not separately interesting — fix the
+      // number first. Skipping avoids stacking two errors on one row.
+      continue
+    }
+
+    // Naming a payer for a line worth nothing is a contradiction the user can actually
+    // resolve, so unlike the advisory warning about documentation this one blocks. Left
+    // alone it would also credit $0 and read as a no-op, hiding a half-finished entry.
+    if (entry.paidBy !== undefined && entry.amount === 0) {
+      errors.push({
+        id: `addOns.${line.id}.payerWithoutAmount`,
+        message:
+          `${line.label} is marked as paid by one parent but has no amount. Enter the ` +
+          `monthly amount, or set it back to shared.`,
+        fields: [fieldIds.addOn(line.id), fieldIds.addOnPayer(line.id)],
       })
     }
   }

@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useWorksheetStore } from './worksheetStore'
-import { SAMPLE_WORKSHEET } from '../../../mocks/supportFixtures'
+import { DEFAULT_INPUT } from '../../../mocks/supportFixtures'
 import { createStaticRulesRepository } from '../../../services/rules/staticRulesRepository'
 import type { RulesRepository } from '../../../services/rules'
 import type { SupportRuleSet } from '../../../types/rules'
@@ -14,7 +14,7 @@ const initial = useWorksheetStore.getState()
 beforeEach(() => {
   useWorksheetStore.setState({
     ...initial,
-    input: structuredClone(SAMPLE_WORKSHEET),
+    input: structuredClone(DEFAULT_INPUT),
     rules: null,
     status: 'idle',
     error: null,
@@ -26,7 +26,7 @@ describe('input actions', () => {
     useWorksheetStore.getState().setIncome('gross', 'a', 5200)
     const income = useWorksheetStore.getState().input.income
     expect(income.gross.a).toBe(5200)
-    expect(income.gross.b).toBe(6500)
+    expect(income.gross.b).toBe(15000)
   })
 
   it('creates an income line that did not exist yet', () => {
@@ -67,7 +67,26 @@ describe('input actions', () => {
     useWorksheetStore.getState().setAddOn('childcare', 900)
     const s = useWorksheetStore.getState().input
     expect(s.childrenCount).toBe(3)
-    expect(s.addOns.childcare).toBe(900)
+    expect(s.addOns.childcare.amount).toBe(900)
+  })
+
+  it('attributes an add-on to a parent and clears it again', () => {
+    useWorksheetStore.getState().setAddOnPayer('childcare', 'b')
+    expect(useWorksheetStore.getState().input.addOns.childcare.paidBy).toBe('b')
+
+    // Omitting the party clears the attribution back to shared. The key must actually be
+    // gone, not present-and-undefined, so the stored object matches the optional-prop type.
+    useWorksheetStore.getState().setAddOnPayer('childcare')
+    const entry = useWorksheetStore.getState().input.addOns.childcare
+    expect(entry.paidBy).toBeUndefined()
+    expect('paidBy' in entry).toBe(false)
+  })
+
+  it('preserves attribution when the amount changes, and vice versa', () => {
+    useWorksheetStore.getState().setAddOnPayer('healthInsurance', 'a')
+    useWorksheetStore.getState().setAddOn('healthInsurance', 310)
+    const entry = useWorksheetStore.getState().input.addOns.healthInsurance
+    expect(entry).toEqual({ amount: 310, paidBy: 'a' })
   })
 
   it('renames a party', () => {
@@ -79,7 +98,7 @@ describe('input actions', () => {
     useWorksheetStore.getState().setChildrenCount(6)
     useWorksheetStore.getState().reset()
     expect(useWorksheetStore.getState().input.childrenCount).toBe(
-      SAMPLE_WORKSHEET.childrenCount,
+      DEFAULT_INPUT.childrenCount,
     )
   })
 })

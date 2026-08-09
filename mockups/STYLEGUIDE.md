@@ -155,7 +155,14 @@ Copy follows the Voice rules below: say what happened *and* the fix ("Overnights
 
 ### Segmented toggle
 Pill track (`--surface-2`) with a raised selected segment (`--surface` + `--shadow-sm`). For
-mutually exclusive choices: pay period, yes/no, paid vs received.
+mutually exclusive choices: pay period, yes/no, paid vs received, who carries a shared cost.
+
+Two ARIA variants, and the choice is semantic rather than cosmetic. `tabs` (`tablist`/`tab`)
+is for switching between views; **`radiogroup` (`radiogroup`/`radio`) is for a form choice**
+that is part of the data being collected — a tab announces "you are viewing this", a radio
+announces "this is what you chose". The radiogroup variant is a single tab stop with **roving
+focus**: Tab enters at the selected segment, and the arrow keys move and select (selection
+follows focus), wrapping at both ends.
 
 ### Number stepper
 Pill with `–` / value / `+`; value in tabular 700. Used for the number of children.

@@ -6,7 +6,7 @@
  */
 import { describe, expect, it, beforeAll } from 'vitest'
 import { createStaticRulesRepository } from '../../services/rules/staticRulesRepository'
-import { SAMPLE_WORKSHEET } from '../../mocks/supportFixtures'
+import { DEFAULT_INPUT } from '../../mocks/supportFixtures'
 import { calculateChildSupport } from './calculateChildSupport'
 import { selfSupportReserve } from './lowIncome'
 import type { SupportRuleSet } from '../../types/rules'
@@ -19,7 +19,7 @@ beforeAll(async () => {
 })
 
 function input(overrides: Partial<WorksheetInput> = {}): WorksheetInput {
-  return { ...structuredClone(SAMPLE_WORKSHEET), ...overrides }
+  return { ...structuredClone(DEFAULT_INPUT), ...overrides }
 }
 
 describe('rule set integrity', () => {
@@ -58,16 +58,16 @@ describe('calculateChildSupport — sample worksheet', () => {
   it('produces a coherent estimate', () => {
     const e = calculateChildSupport(input(), rules)
 
-    // AGI: Taylor 4800; Blake 6500 − 450 (other-children order) = 6050.
-    expect(e.adjustedIncome).toEqual({ a: 4800, b: 6050 })
-    expect(e.combinedIncome).toBe(10850)
+    // AGI: no other-children order applies, so AGI equals gross for both parties.
+    expect(e.adjustedIncome).toEqual({ a: 8300, b: 15000 })
+    expect(e.combinedIncome).toBe(23300)
     expect(e.shareA + e.shareB).toBeCloseTo(100, 1)
     expect(e.incomplete).toBe(false)
     expect(e.amount).toBeGreaterThan(0)
-    // Taylor has the majority of overnights, so Blake pays.
+    // A has the majority of overnights, so B pays.
     expect(e.payer).toBe('b')
     expect(e.recipient).toBe('a')
-    expect(e.addOns).toBe(1080)
+    expect(e.addOns).toBe(950)
   })
 
   it('does not warn about overnights — that is now a blocking validation error', () => {
@@ -237,7 +237,135 @@ describe('above the schedule ceiling', () => {
       rules,
     )
     expect(e.basis).toBe('aboveScheduleCeiling')
-    // Two children, top row of the schedule.
-    expect(e.basicObligation).toBe(4992)
+    // One child (the default worksheet's childrenCount), top row of the schedule.
+    expect(e.basicObligation).toBe(3398)
+  })
+})
+
+/**
+ * Add-on credits (`C.R.S. §14-10-115(9)–(10)`).
+ *
+ * Before this feature, nothing pinned add-on behaviour at all — the engine added the
+ * payer's share and never subtracted anything, which silently assumed the recipient paid
+ * every bill. These tests fix that assumption in place as the *unattributed* default and
+ * cover the credit that departs from it.
+ */
+describe('add-on credits', () => {
+  /** Attribute one shared-cost line to a parent, leaving the amounts alone. */
+  function withPayer(lineId: string, party: 'a' | 'b'): WorksheetInput {
+    const w = input()
+    w.addOns[lineId] = { ...w.addOns[lineId], paidBy: party }
+    return w
+  }
+
+  it('reproduces the pre-credit figures when nothing is attributed', () => {
+    // The regression guard: an untouched worksheet must calculate exactly as it did
+    // before add-on entries gained a carrier.
+    const e = calculateChildSupport(input(), rules)
+    expect(e.addOns).toBe(950)
+    expect(e.perParty[e.payer].addOnCredit).toBe(0)
+    // Unattributed lines are modelled as carried by the recipient — the assumption the
+    // engine always made implicitly, now stated.
+    expect(e.perParty[e.recipient].addOnsPaid).toBe(950)
+    expect(e.perParty[e.payer].addOnsPaid).toBe(0)
+    expect(e.warnings).toEqual([])
+  })
+
+  it('credits the carrying parent the full amount, not their pro-rata share', () => {
+    const base = calculateChildSupport(input(), rules)
+    const credited = calculateChildSupport(withPayer('healthInsurance', 'b'), rules)
+
+    // Blake pays; the $200 premium comes off the top of his transfer in full.
+    expect(base.payer).toBe('b')
+    expect(credited.payer).toBe('b')
+    expect(base.amount - credited.amount).toBe(200)
+    expect(credited.perParty.b.addOnCredit).toBe(200)
+    // His total outlay is unchanged: he pays $200 to the insurer instead of to Taylor.
+    expect(credited.amount + 200).toBe(base.amount)
+  })
+
+  it('leaves the pooled obligation and both income shares untouched', () => {
+    // The expense stays shared — both parents still owe their percentage of it. Only who
+    // hands over the money changes, so nothing upstream of the transfer may move.
+    const base = calculateChildSupport(input(), rules)
+    const credited = calculateChildSupport(withPayer('childcare', 'b'), rules)
+
+    expect(credited.addOns).toBe(base.addOns)
+    expect(credited.perParty.a.shareOfAddOns).toBe(base.perParty.a.shareOfAddOns)
+    expect(credited.perParty.b.shareOfAddOns).toBe(base.perParty.b.shareOfAddOns)
+    expect(credited.basicObligation).toBe(base.basicObligation)
+  })
+
+  it('splits the add-on total between the parties by income share', () => {
+    const e = calculateChildSupport(input(), rules)
+    expect(e.perParty.a.shareOfAddOns + e.perParty.b.shareOfAddOns).toBeCloseTo(e.addOns, 0)
+  })
+
+  it('does not change who pays when the recipient carries a bill', () => {
+    // Direction is settled from the basic figures before add-ons are attributed, so a
+    // credit to the recipient is inert — it cannot flip the worksheet around.
+    const base = calculateChildSupport(input(), rules)
+    const credited = calculateChildSupport(withPayer('childcare', 'a'), rules)
+
+    expect(credited.payer).toBe(base.payer)
+    expect(credited.recipient).toBe(base.recipient)
+    expect(credited.amount).toBe(base.amount)
+    expect(credited.perParty[credited.payer].addOnCredit).toBe(0)
+  })
+
+  it('floors at zero and names the excess rather than reversing direction', () => {
+    // A childcare bill far larger than the obligation, carried by the payer.
+    const w = input()
+    w.addOns.childcare = { amount: 20000, paidBy: 'b' }
+    const e = calculateChildSupport(w, rules)
+
+    expect(e.amount).toBe(0)
+    // Direction holds: Blake still owes Taylor, he has simply overpaid.
+    expect(e.payer).toBe('b')
+    expect(e.recipient).toBe('a')
+    // The discarded number is the one that gets litigated, so it must be visible.
+    expect(e.warnings.some((warning) => /exceed their share by \$\d/.test(warning))).toBe(true)
+  })
+
+  it('raises the documentation advisory only when a line is attributed', () => {
+    const shared = calculateChildSupport(input(), rules)
+    expect(shared.warnings.some((w) => w.includes('documented'))).toBe(false)
+
+    const credited = calculateChildSupport(withPayer('healthInsurance', 'b'), rules)
+    const advisory = credited.warnings.find((w) => w.includes('documented'))
+    // Names the line from the rule set's own label, not hardcoded English.
+    expect(advisory).toContain(rules.addOnLines.find((l) => l.id === 'healthInsurance')!.label)
+  })
+
+  it('ignores an attribution on a zero-amount line', () => {
+    // "Blake pays $0 of childcare" is not a credit, and must not raise the advisory.
+    const w = input()
+    w.addOns.childcare = { amount: 0, paidBy: 'b' }
+    const e = calculateChildSupport(w, rules)
+    expect(e.perParty.b.addOnCredit).toBe(0)
+    expect(e.warnings.some((warning) => warning.includes('documented'))).toBe(false)
+  })
+
+  it('applies the credit after the statutory cap, not before', () => {
+    // A low-income payer whose obligation is capped, carrying a bill. Capping limits the
+    // *obligation*; the credit is money already paid against it. If the order were
+    // reversed the cap would swallow the credit and charge them twice.
+    const w = input({
+      income: {
+        gross: { a: 6000, b: 1400 },
+        selfEmployment: { a: 0, b: 0 },
+        maintenance: { a: 0, b: 0 },
+        otherChildren: { a: 0, b: 0 },
+      },
+      parentingTime: { a: 300, b: 65 },
+    })
+    w.addOns = { healthInsurance: { amount: 100, paidBy: 'b' } }
+
+    const uncredited = input({ ...w, addOns: { healthInsurance: { amount: 100 } } })
+    const base = calculateChildSupport(uncredited, rules)
+    const e = calculateChildSupport(w, rules)
+
+    expect(base.payer).toBe('b')
+    expect(e.amount).toBe(Math.max(0, base.amount - 100))
   })
 })

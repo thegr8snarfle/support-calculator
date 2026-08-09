@@ -10,6 +10,8 @@ const ZERO_PARTY = {
   parentingTimeCreditPct: 0,
   parentingTimeCredit: 0,
   shareOfAddOns: 0,
+  addOnsPaid: 0,
+  addOnCredit: 0,
   obligation: 0,
 }
 
