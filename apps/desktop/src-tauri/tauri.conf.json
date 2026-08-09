@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Crazy Baby Mama Defense System",
+  "productName": "cbmds",
   "version": "0.1.0",
   "identifier": "com.cbmds.support-calculator",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Crazy Baby Mama Defense System",
+        "title": "Intelligent Family Support Calculator",
         "width": 1280,
         "height": 860,
         "minWidth": 720,
@@ -44,6 +44,11 @@
     },
     "iOS": {
       "minimumSystemVersion": "14.0"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
     }
   }
 }

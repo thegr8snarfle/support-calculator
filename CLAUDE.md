@@ -89,8 +89,25 @@ iOS (Tauri) — same harness, delegate to `@support-calculator/desktop`:
   Store), all credentials env-driven so nothing secret is committed. See README → _Run on
   iOS_.
 
-The two `desktop` scripts are `. "$HOME/.cargo/env" 2>/dev/null; tauri dev|build` (and `build`
-additionally sets `CI=true`). Why each piece:
+Windows (Tauri) — same harness, delegate to `@support-calculator/desktop`, but **must be run
+from an actual Windows machine** (Tauri cannot cross-compile a Windows installer from macOS):
+
+- `npm run windows:dev` — plain `tauri dev`, opens a native window with HMR.
+- `npm run windows:build` — plain `tauri build` → bundles `.msi` (WiX) and `.exe` (NSIS)
+  installers under `apps/desktop/src-tauri/target/release/bundle/{msi,nsis}/`, using
+  `bundle.targets: "all"` and `bundle.windows.webviewInstallMode` (already configured — see
+  `tauri.conf.json`), both already in place. **Prerequisites:** the Rust toolchain via rustup
+  (the Windows installer's default target, `x86_64-pc-windows-msvc`, is correct out of the
+  box), **Microsoft C++ Build Tools** (the "Desktop development with C++" workload — needed for
+  `link.exe`, the Rust linker on Windows), and a **WebView2 Runtime** on the dev machine itself
+  (preinstalled on modern Windows 10/11 via Windows Update since ~2022; otherwise install
+  Microsoft's Evergreen bootstrapper). Tauri auto-downloads the NSIS/WiX bundler tooling on
+  first build — no separate installer-tool install step. **Unsigned build** — like the macOS
+  `.dmg`, the `.msi`/`.exe` trigger a Windows **SmartScreen** warning on another machine (no
+  code-signing certificate yet); see README → _Run on Windows_.
+
+The `dev`/`build` `desktop` scripts are `. "$HOME/.cargo/env" 2>/dev/null; tauri dev|build`
+(and `build` additionally sets `CI=true`). Why each piece:
 
 - **`. "$HOME/.cargo/env"`** — puts `~/.cargo/bin` on PATH so `tauri` can find `cargo`, even
   when the invoking terminal never sourced the rustup profile (a shell opened before Rust was
@@ -102,7 +119,10 @@ additionally sets `CI=true`). Why each piece:
   (background shells, SSH, CI). The DMG is produced without a custom window layout — fine
   since no DMG background is configured.
 
-(Both are POSIX-shell syntax; a future Windows build would express them differently.)
+(Both are POSIX-shell syntax, which is why `windows:dev`/`windows:build` above are plain
+`tauri dev`/`tauri build` with no shell prefix — rustup's Windows installer puts `cargo` on
+`PATH` persistently via the registry, so the per-shell env-sourcing workaround doesn't apply
+there.)
 
 Housekeeping:
 
@@ -141,11 +161,15 @@ support-calculator/          workspace root (private; workspaces: ["apps/*"]; on
 [rustup](https://rustup.rs)) and, on macOS, the Xcode Command Line Tools. Building/running the
 **iOS** target additionally needs the full **Xcode** app, an **iOS Simulator runtime**
 (`xcodebuild -downloadPlatform iOS`), **CocoaPods** (`brew install cocoapods`), and the iOS
-Rust targets (`aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`). The web
-workspace needs none of it. **Scope today: local macOS build + iOS Simulator** — the iOS App
-Store path (signing, fastlane upload) is **scaffolded but dormant** pending a paid Apple
-Developer account, and Windows/CI packaging plus macOS code signing / notarization are
-deferred (unsigned local macOS builds trigger a Gatekeeper warning off-machine).
+Rust targets (`aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`). Building the
+**Windows** target additionally needs Microsoft C++ Build Tools and a WebView2 Runtime, and
+must run on an actual Windows machine — Tauri cannot cross-compile a Windows installer from
+macOS. The web workspace needs none of it. **Scope today: local macOS build + iOS Simulator +
+local Windows build** — the iOS App Store path (signing, fastlane upload) is **scaffolded but
+dormant** pending a paid Apple Developer account; **CI packaging** (any platform) and **code
+signing / notarization** for macOS and Windows are deferred (unsigned local macOS builds
+trigger a Gatekeeper warning off-machine, unsigned Windows builds trigger a SmartScreen
+warning off-machine).
 
 ## Configuration
 
@@ -256,9 +280,9 @@ reference material.
 - **The repo is now an npm-workspaces monorepo:** the web app moved verbatim to `apps/web`
   (`@support-calculator/web`) and a **Tauri v2 desktop harness** was added at `apps/desktop`
   (`@support-calculator/desktop`). The desktop app wraps the built web app in the OS-native
-  webview; `desktop:dev` / `desktop:build` are wired. **Local macOS build only** — Windows/CI
-  packaging and signing are deferred, and building requires the Rust toolchain. See
-  **Monorepo layout & desktop app**.
+  webview; `desktop:dev` / `desktop:build` are wired. **Local macOS build** — CI packaging and
+  signing are deferred, and building requires the Rust toolchain. See **Monorepo layout &
+  desktop app**.
 - **The same harness now targets iOS.** `tauri ios init` generated the Xcode project at
   `apps/desktop/src-tauri/gen/apple/` (tracked in git, with build output gitignored); `ios:dev`
   / `ios:build` are wired, and `vite.config.ts` honors `TAURI_DEV_HOST` for physical-device
@@ -267,6 +291,22 @@ reference material.
   output, and env-driven **fastlane** lanes (`gen/apple/fastlane/`, `beta`/`release`) are in
   place, awaiting a paid Apple Developer account + credentials. See **Monorepo layout &
   desktop app** and README → _Run on iOS_.
+- **The same harness now also targets Windows.** `tauri.conf.json` gained a
+  `bundle.windows.webviewInstallMode` block (`downloadBootstrapper`, Tauri's own default,
+  declared explicitly rather than left implicit); `windows:dev` / `windows:build` are wired as
+  plain `tauri dev`/`tauri build` (no shell prefix needed — see **Commands**). The Windows
+  target needed no new icon assets: `icons/icon.ico` and the full Windows tile/`StoreLogo` PNG
+  set were already present from the original `tauri icon` scaffolding, just never activated.
+  **Local Windows build only, on an actual Windows machine** — like macOS and iOS before it,
+  Tauri cannot cross-compile a Windows installer from macOS, so this session could wire up the
+  config/scripts/docs but not build or run the resulting `.msi`/`.exe` itself. No CI was added.
+  The build is **unsigned**, same posture as the macOS `.dmg`: it triggers a Windows
+  **SmartScreen** warning on another machine, worked around the same way Gatekeeper is (see
+  README → _Run on Windows_). Alongside this, the product name was shortened from "Crazy Baby
+  Mama Defense System" to **`cbmds`** in `tauri.conf.json`/`Cargo.toml`/`apps/desktop/package.json`
+  (it now drives bundle/installer filenames), while the **visible window title** — what the
+  title bar/taskbar actually shows — was set separately to "Intelligent Family Support
+  Calculator".
 - **Tailwind v4 is installed** and CSS-configured (`@tailwindcss/vite`, no config files);
   Columbine tokens live in `src/index.css` and are exposed to utilities via `@theme inline`.
 - The Vite starter has been **replaced**: `src/App.tsx` renders the app shell (`AppHeader`
@@ -382,6 +422,7 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
 | Mobile app (Tauri iOS, `apps/desktop`) — Simulator build | — | — | ✅ |
 | iOS App Store distribution (fastlane lanes, signing) | — | — | ⬜ |
+| Desktop app (Tauri, `apps/desktop`) — Windows local build | — | — | ✅ |
 
 When you complete a stage, flip the cell to ✅ (or 🎨 when only a mockup is added), add a
 row for any new feature, and cite the statute/guideline for anything under **Logic**.

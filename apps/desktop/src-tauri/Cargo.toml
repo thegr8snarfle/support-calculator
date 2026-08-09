@@ -1,7 +1,7 @@
 [package]
 name = "crazy-baby-mama-defense-system"
 version = "0.0.0"
-description = "Crazy Baby Mama Defense System"
+description = "cbmds"
 edition = "2021"
 rust-version = "1.77.2"
 

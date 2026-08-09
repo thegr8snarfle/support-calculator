@@ -17,6 +17,8 @@
     "desktop:dev": "npm run dev -w @support-calculator/desktop",
     "desktop:build": "npm run build -w @support-calculator/desktop",
     "ios:dev": "npm run ios:dev -w @support-calculator/desktop",
-    "ios:build": "npm run ios:build -w @support-calculator/desktop"
+    "ios:build": "npm run ios:build -w @support-calculator/desktop",
+    "windows:dev": "npm run windows:dev -w @support-calculator/desktop",
+    "windows:build": "npm run windows:build -w @support-calculator/desktop"
   }
 }

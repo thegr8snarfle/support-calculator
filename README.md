@@ -60,6 +60,8 @@ Other scripts:
 | `npm run desktop:build` | Build + bundle the macOS desktop app (`.app` / `.dmg`) |
 | `npm run ios:dev` | Build + launch the app in the iOS Simulator (Tauri) |
 | `npm run ios:build` | Build a signed App Store IPA (requires an Apple Developer account) |
+| `npm run windows:dev` | Launch the app in a native window on Windows (Tauri) |
+| `npm run windows:build` | Build + bundle the Windows desktop app (`.msi` / `.exe`) |
 
 ### Run as a desktop app
 
@@ -80,16 +82,17 @@ npm run desktop:build   # bundles apps/desktop/src-tauri/target/release/bundle/*
 > skips Finder/AppleScript window styling — that step otherwise fails in non-GUI shells
 > (background/SSH/CI); the `.dmg` is produced without a custom window layout.
 >
-> Only local **macOS** builds are set up today; Windows/CI packaging and code signing /
-> notarization are deferred (unsigned local builds show a Gatekeeper warning off-machine).
+> Local **macOS** and **Windows** builds are set up today; CI packaging and code signing /
+> notarization are deferred for both (unsigned local builds show a Gatekeeper warning on
+> another Mac, or a SmartScreen warning on another Windows machine).
 
 #### Distributing the macOS build
 
 `npm run desktop:build` produces a shareable `.dmg` (and the `.app`) under
 `apps/desktop/src-tauri/target/release/bundle/`:
 
-- `macos/Crazy Baby Mama Defense System.app`
-- `dmg/Crazy Baby Mama Defense System_0.1.0_<arch>.dmg` — named from `productName`, `version`,
+- `macos/cbmds.app`
+- `dmg/cbmds_0.1.0_<arch>.dmg` — named from `productName`, `version`,
   and the **host CPU arch** (e.g. `aarch64` on Apple Silicon). The build targets the host arch
   only — a universal (Intel + Apple Silicon) binary is out of scope.
 
@@ -98,7 +101,7 @@ is **unsigned and un-notarized** (no Apple Developer ID yet), macOS Gatekeeper b
 first launch on another Mac. The recipient clears it once, either way:
 
 - **Right-click** the app in Applications → **Open** → **Open** in the dialog, or
-- from Terminal: `xattr -dr com.apple.quarantine "/Applications/Crazy Baby Mama Defense System.app"`
+- from Terminal: `xattr -dr com.apple.quarantine "/Applications/cbmds.app"`
 
 A warning-free open requires Developer ID **signing + notarization**, which is deferred.
 
@@ -138,6 +141,48 @@ the environment.
    Connect API key** supplied through env vars: `APP_STORE_CONNECT_API_KEY_ID`,
    `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY` (path to `AuthKey_*.p8`), plus
    `FASTLANE_APPLE_ID`. Without those set, the lanes are inert.
+
+### Run on Windows
+
+The same Tauri harness targets Windows — the built web app runs in a native **WebView2**
+window. Unlike macOS/iOS, this **must be run on an actual Windows machine**: Tauri cannot
+cross-compile a Windows installer from macOS.
+
+**Prerequisites (Windows only):**
+
+- The **Rust toolchain** via [rustup](https://rustup.rs) — the Windows installer's default
+  target (`x86_64-pc-windows-msvc`) is correct out of the box
+- **Microsoft C++ Build Tools** (the "Desktop development with C++" workload) — needed for
+  `link.exe`, the Rust linker on Windows
+- A **WebView2 Runtime** on the dev machine — preinstalled on modern Windows 10/11 via Windows
+  Update since ~2022; otherwise install Microsoft's Evergreen bootstrapper
+
+```bash
+npm run windows:dev     # opens a native window; the web dev server + HMR run inside it
+npm run windows:build   # bundles apps/desktop/src-tauri/target/release/bundle/{msi,nsis}/*.{msi,exe}
+```
+
+> `windows:dev`/`windows:build` are plain `tauri dev`/`tauri build` — no shell prefix needed,
+> unlike the macOS `desktop` scripts, since rustup's Windows installer puts `cargo` on `PATH`
+> persistently (no per-shell env-sourcing workaround required). Tauri auto-downloads the
+> NSIS/WiX bundler tooling on first build, so no separate installer-tool install step is
+> needed.
+
+#### Distributing the Windows build
+
+`npm run windows:build` produces both installer formats under
+`apps/desktop/src-tauri/target/release/bundle/`:
+
+- `msi/cbmds_0.1.0_x64_en-US.msi` (WiX)
+- `nsis/cbmds_0.1.0_x64-setup.exe` (NSIS)
+
+Hand someone either file to install. Because the build is **unsigned** (no code-signing
+certificate yet), Windows **SmartScreen** blocks the first launch on another machine with a
+"Windows protected your PC" prompt. The recipient clears it once: click **More info**, then
+**Run anyway**.
+
+A warning-free install requires a code-signing certificate, which is deferred — same posture
+as the macOS build's deferred Developer ID signing/notarization.
 
 ## Project structure
 
@@ -239,6 +284,7 @@ updated as work lands. Snapshot:
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
 | Mobile app (Tauri iOS, `apps/desktop`) — simulator build | — | — | ✅ |
 | iOS App Store distribution (fastlane, signing) | — | — | ⬜ |
+| Desktop app (Tauri, `apps/desktop`) — Windows local build | — | — | ✅ |
 
 ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 

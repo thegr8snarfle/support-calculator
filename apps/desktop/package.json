@@ -2,13 +2,15 @@
   "name": "@support-calculator/desktop",
   "private": true,
   "version": "0.0.0",
-  "description": "Tauri desktop harness for the Crazy Baby Mama Defense System web app.",
+  "description": "Tauri desktop harness for the cbmds web app.",
   "scripts": {
     "tauri": "tauri",
     "dev": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri dev",
     "build": ". \"$HOME/.cargo/env\" 2>/dev/null; CI=true tauri build",
     "ios:dev": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri ios dev",
-    "ios:build": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri ios build --export-method app-store-connect"
+    "ios:build": ". \"$HOME/.cargo/env\" 2>/dev/null; tauri ios build --export-method app-store-connect",
+    "windows:dev": "tauri dev",
+    "windows:build": "tauri build"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"
