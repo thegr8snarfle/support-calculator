@@ -1,14 +1,20 @@
 import { useStepFlow } from '../../navigation'
 import { nextTheme, themeLabel, useTheme } from '../../preferences'
 
+export type AppHeaderProps = {
+  /** Opens the statute library — a screen outside the guided flow (see `App.tsx`). */
+  onOpenStatutes: () => void
+}
+
 /**
- * Top app bar: brand, guided-flow steps, and the theme toggle.
+ * Top app bar: brand, guided-flow steps, the statute library entry point, and the
+ * theme toggle.
  *
  * Note this component lives under `features/worksheet/` but is really app-level chrome, so
  * it reaches into `features/preferences` — a cross-feature import. Moving it to a shared
  * location is a separate refactor.
  */
-export function AppHeader() {
+export function AppHeader({ onOpenStatutes }: AppHeaderProps) {
   const { current, steps, goTo, canGoTo } = useStepFlow()
   // The theme is owned by ThemeProvider, which also persists it and keeps `data-theme` in
   // sync — the header only picks the next value in the cycle.
@@ -68,6 +74,22 @@ export function AppHeader() {
           )
         })}
       </nav>
+
+      <button
+        type="button"
+        onClick={onOpenStatutes}
+        aria-label="View statute source documents"
+        title="Statute source documents"
+        className="focus-ring flex items-center gap-x-1 rounded-pill border border-border px-3 py-5px text-[12px] text-text-muted cursor-pointer hover:bg-surface-2"
+      >
+        <span
+          aria-hidden="true"
+          className="font-bold text-white leading-1px"
+        >
+          &sect;
+        </span>
+        <span className="hidden sm:inline">Statutes</span>
+      </button>
 
       <button
         type="button"

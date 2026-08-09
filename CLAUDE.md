@@ -330,6 +330,17 @@ reference material.
   the reducer gates progression via `canAdvance` / `canGoTo` — steps ahead of an unfinished
   worksheet are unreachable, while warnings (e.g. overnights ≠ 365) are surfaced inline
   rather than blocking.
+- **The statute source documents behind the 2026 calculation are now curated and browsable**
+  (`src/services/statutes/`, `src/features/statutes/`): the HB 25-1159 Final Act and C.R.S.
+  Title 14 (2024) PDFs are downloaded once and bundled at `apps/web/public/statutes/`, so the
+  "Statute Library" page (opened from a new header entry point) works fully offline in the
+  desktop/iOS build. It lists what each document is, which calculation citations it informs,
+  and offers a same-origin download. A read-only `ActiveStatuteBadge` on the worksheet names
+  the version currently applied — **not editable yet**. This adds ~2MB to the bundle (was
+  ~0.5MB). Deliberately out of scope: switching which statute vintage the worksheet
+  calculates with, and explaining what changed between two vintages — both need the
+  calculation engine to support a second (pre-2026) methodology first, which it does not yet.
+  See `apps/web/CLAUDE.md` → _Statute data_.
 - Design foundation is done: the "Columbine" theme, worksheet mockups, and style guide live
   in `mockups/` (see the Design section).
 
@@ -356,6 +367,9 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
 | Support-calculation engine (`C.R.S. §14-10-115`, HB 25-1159) | ⬜ | — | ✅ |
 | Statute data layer (rule sets, Zod validation, MCP-ready port) | — | — | ✅ |
+| Statute document library (curated PDFs, download page, worksheet version indicator) | — | ✅ | ✅ |
+| Statute version switching (change which vintage the worksheet calculates with) | — | ⬜ | ⬜ |
+| Statute version diff (explain what changed between two vintages) | — | ⬜ | ⬜ |
 | State wiring / live-updating estimate | ⬜ | ✅ | ✅ |
 | Step gating from validation (`canAdvance`) | — | ✅ | ✅ |
 | Worksheet input validation (field errors, frozen estimate) | ✅ | ✅ | ✅ |

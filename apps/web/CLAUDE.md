@@ -188,6 +188,25 @@ and parenting-time credit table (367 entries) were transcribed programmatically 
 enrolled bill text, with invariants (monotonicity, completeness, uniform steps) asserted
 before the JSON was emitted. Those same invariants are re-checked by the Zod schema at load.
 
+**Statute *documents* are a separate, decoupled concern** (`src/services/statutes/` +
+`src/features/statutes/`) from the calculation rule set above. `RuleSetSource` records the
+provenance of one rule set's *transcribed data* and sits inside the Zod-validated calculation
+trust boundary; a `StatuteDocument` (`src/types/statutes.ts`) is human-readable reference
+material that never supplies a number the engine reads — C.R.S. Title 14, for instance,
+doesn't even contain the schedule (`§14-10-115(7)(b)` is a publisher placeholder in the 2024
+edition). Keeping the two apart means curating a reference document never touches the
+calculation boundary. The curated PDFs are bundled under `apps/web/public/statutes/` and
+downloaded once at implementation time (not fetched at runtime); `STATUTE_DOCUMENTS`
+(`src/services/statutes/statuteDocuments.ts`) is a plain synchronous list, not a repository
+port, since — unlike calculation rules — there's no anticipated remote/MCP source for it.
+`features/statutes/components/StatuteDocumentsPage.tsx` lists them with a same-origin download
+link each; `ActiveStatuteBadge.tsx` is a read-only worksheet indicator naming the version in
+effect (jurisdiction, primary citation, effective date) — **not editable yet**. Letting a user
+switch which vintage the worksheet calculates with, and explaining what changed between two
+vintages, are both deferred: the calculation engine (`domain/support/`) has no code path at
+all for a pre-2026 methodology (the 93-overnight cliff, the 1.50 shared-care multiplier), so
+that's a future engine change, not a data change.
+
 ## Directory strategy
 
 As the app grows beyond the worksheet, organize by **feature**:
@@ -207,6 +226,11 @@ As the app grows beyond the worksheet, organize by **feature**:
 
 > The worksheet feature lives at `src/features/worksheet/` — its UI under `components/`,
 > its public API in `index.ts`. Add `hooks/` and `services/` there as real logic lands.
+>
+> The statute-document library lives at `src/features/statutes/` (`StatuteDocumentsPage`,
+> `ActiveStatuteBadge`). It imports `useRules` from `features/worksheet/hooks/useRules`
+> directly rather than the `worksheet` barrel — going through `index.ts` would cycle back,
+> since `WorksheetPage` (re-exported from that same barrel) renders `ActiveStatuteBadge`.
 
 **Before editing a component**, consider whether it should be broken out into
 `src/features/[feature-name]/` per this strategy.

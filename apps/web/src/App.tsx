@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   AppHeader,
   WorksheetPage,
@@ -8,17 +9,26 @@ import {
 } from './features/worksheet'
 import { StepFlowProvider, useStepFlow } from './features/navigation'
 import { ThemeProvider } from './features/preferences'
+import { StatuteDocumentsPage } from './features/statutes'
 
-/** App shell: header + the active step's page. Reads the current step from the flow. */
+/** Which top-level screen is showing — separate from `StepFlowState`, which only
+ *  knows about the linear worksheet/review/results progression. The statute library
+ *  is a non-linear escape hatch from that flow, not a fourth step in it. */
+type AppView = 'flow' | 'statutes'
+
+/** App shell: header + the active screen. Reads the current step from the flow. */
 function AppShell() {
   const { current } = useStepFlow()
+  const [view, setView] = useState<AppView>('flow')
   // Load the statute rule set once for the whole flow (the app's only async boundary).
   useRules()
   return (
     <div className="min-h-svh overflow-x-clip bg-bg text-text">
-      <AppHeader />
+      <AppHeader onOpenStatutes={() => setView('statutes')} />
       <main className="max-w-[1240px] mx-auto p-4 sm:p-6 lg:p-8">
-        {current === 'review' ? (
+        {view === 'statutes' ? (
+          <StatuteDocumentsPage onBack={() => setView('flow')} />
+        ) : current === 'review' ? (
           <ReviewPage />
         ) : current === 'results' ? (
           <ResultsPage />

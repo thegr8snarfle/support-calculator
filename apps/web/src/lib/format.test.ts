@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatUsd, formatPercent, parseUsd, parseCount } from './format'
+import { formatUsd, formatPercent, parseUsd, parseCount, formatIsoDateLong } from './format'
 
 describe('formatUsd', () => {
   it('formats whole dollars with separators', () => {
@@ -38,6 +38,19 @@ describe('parseUsd', () => {
     expect(parseUsd('abc')).toBeNull()
     expect(parseUsd('12abc')).toBeNull()
     expect(parseUsd('-')).toBeNull()
+  })
+})
+
+describe('formatIsoDateLong', () => {
+  it('formats a date as long-form', () => {
+    expect(formatIsoDateLong('2026-03-01')).toBe('March 1, 2026')
+  })
+
+  it('does not shift a day under a negative UTC offset', () => {
+    // A local-time interpretation (e.g. `new Date('2026-03-01').getDate()` read in a
+    // UTC-5 zone) would misread this as the last day of February.
+    expect(formatIsoDateLong('2026-03-01')).not.toContain('Feb')
+    expect(formatIsoDateLong('2026-01-01')).toBe('January 1, 2026')
   })
 })
 

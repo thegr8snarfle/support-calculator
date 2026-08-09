@@ -11,9 +11,6 @@
  */
 import type { WorksheetInput } from '../types/support'
 
-/** The controlling Colorado guideline, cited wherever an estimate is shown. */
-export const SUPPORT_STATUTE = 'C.R.S. §14-10-115'
-
 /** Example worksheet inputs (mirrors mockups/src/worksheet.html). */
 export const DEFAULT_INPUT: WorksheetInput = {
   parties: { a: { name: 'Asshole' }, b: { name: 'Austin' } },

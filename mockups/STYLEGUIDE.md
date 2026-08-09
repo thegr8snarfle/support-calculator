@@ -167,6 +167,20 @@ follows focus), wrapping at both ends.
 ### Number stepper
 Pill with `–` / value / `+`; value in tabular 700. Used for the number of children.
 
+### Chip
+Small pill label (`--r-pill`), 11px semibold. Three tones: neutral (`--surface-2` /
+`--text-muted`, the default), accent (`--primary-weak` / `--primary`, e.g. "Amendment"), and
+positive (`--positive` at reduced opacity, e.g. an applied/active state). Used for a document's
+role and the citation topics it informs on the statute document card below.
+
+### Statute document card
+Extends **Section card** (no numbered badge): title + role `Chip`, a one-paragraph
+description, a retrieved-date line, an "Informs" list of topic `Chip`s each paired with the
+live statute citation it maps to, and two actions — a same-origin **Download PDF** (secondary
+button styled `<a download>`) and an external **View source** (ghost button styled `<a
+target="_blank">`). No mockup PNG exists for this — designed directly in the Columbine
+language, the same as the Review and Results pages before it.
+
 ### Help affordance
 Small circular `?` (`--surface-2`, `--border`). Reveals a dark tooltip (`--text` bg,
 `--surface` text) with a caret. Keep copy to one plain sentence.

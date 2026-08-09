@@ -6,6 +6,7 @@ import { NumberStepper } from '../../../components/ui/NumberStepper'
 import { HelpTip } from '../../../components/ui/HelpTip'
 import { FieldError } from '../../../components/ui/FieldError'
 import { AddOnPayerToggle } from './AddOnPayerToggle'
+import { ActiveStatuteBadge } from '../../statutes'
 import { ParentingTimeBar } from './ParentingTimeBar'
 import { ResultsRail } from './ResultsRail'
 import { SupportCitation } from './SupportCitation'
@@ -90,6 +91,8 @@ export function WorksheetPage() {
           <FieldError>{error ?? 'Could not load the support guidelines.'}</FieldError>
         </div>
       )}
+
+      <ActiveStatuteBadge />
 
       <ValidationSummary />
 

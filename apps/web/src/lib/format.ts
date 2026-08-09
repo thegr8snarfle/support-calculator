@@ -15,6 +15,22 @@ export function formatPercent(value: number): string {
   return `${value}%`
 }
 
+const LONG_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+})
+
+/**
+ * Format an ISO date (`"2026-03-01"`) as a long-form date (`"March 1, 2026"`).
+ * Rendered against UTC explicitly, not the viewer's local zone, so a date can't
+ * shift a day earlier under a negative UTC offset.
+ */
+export function formatIsoDateLong(iso: string): string {
+  return LONG_DATE_FORMATTER.format(new Date(`${iso}T00:00:00Z`))
+}
+
 /**
  * Parse a user-typed money string into a number, e.g. `"4,800" → 4800`,
  * `"$1,234.50" → 1234.5`, `"−$612" → -612`.

@@ -154,6 +154,9 @@ apps/
                      SupportCitation), sections.ts, and index.ts (public API)
         navigation/  Guided-flow state — reducer model (stepFlow.ts) + useStepFlow() hook /
                      StepFlowProvider driving Worksheet → Review → Results
+      domain/
+        support/ Pure calculation engine (calculateChildSupport, validate) — see
+                 apps/web/src/domain/support/README.md for the full methodology walkthrough
       types/     Shared/domain types, split by domain (e.g. common.ts)
       mocks/     Mock-fixture repository (SAMPLE_WORKSHEET / SAMPLE_ESTIMATE) — the shared
                  static example data, and future unit-test fixtures
@@ -170,6 +173,10 @@ apps/
 mockups/         "Columbine" design system: theme.css (token source of truth),
                  STYLEGUIDE.md, and reference PNGs rendered from mockups/src/*.html
 ```
+
+See **[apps/web/src/domain/support/README.md](./apps/web/src/domain/support/README.md)** for
+a full walkthrough of the calculation methodology — each of the engine's seven steps, the file
+that implements it, and the exact statute subsection it cites.
 
 ## Configuration
 
@@ -222,6 +229,7 @@ updated as work lands. Snapshot:
 | Spousal maintenance (alimony) flow | ⬜ | ⬜ | ⬜ |
 | Support-calculation engine (C.R.S. §14-10-115, HB 25-1159) | ⬜ | — | ✅ |
 | Statute data layer (rule sets, validation, MCP-ready port) | — | — | ✅ |
+| Statute document library (curated PDFs, download page, worksheet version indicator) | — | ✅ | ✅ |
 | State wiring / live-updating estimate | ⬜ | ✅ | ✅ |
 | Worksheet input validation (field errors, frozen estimate) | ✅ | ✅ | ✅ |
 | Persisted user preferences (storage port, Zod boundary) | — | — | ✅ |
@@ -254,6 +262,10 @@ another state — means adding a rule set, not editing the engine.
   https://content.leg.colorado.gov/sites/default/files/images/olls/crs2024-title-14.pdf
   (useful for surrounding statutory text, but note it **omits** the schedule table itself)
 - Colorado child support guide — https://divorce.law/guides/child-support-calculator/colorado/
+
+Both source PDFs above are bundled with the app and downloadable in-app from the **Statute
+Library** (the header's "Statutes" button), alongside a note on which calculation elements
+each one informs.
 
 > **This is an estimate, not legal advice.** Courts may deviate from the guidelines, and the
 > figures here are not a substitute for advice from a Colorado family-law attorney.
