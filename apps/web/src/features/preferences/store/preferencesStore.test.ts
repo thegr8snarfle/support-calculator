@@ -17,7 +17,7 @@ describe('preferencesStore', () => {
   it('hydrates from the injected repository', () => {
     usePreferencesStore
       .getState()
-      .hydrate(createMemoryPreferences({ version: 1, theme: 'dark' }))
+      .hydrate(createMemoryPreferences({ version: 1, theme: 'dark', parentNames: { a: '', b: '' } }))
     expect(usePreferencesStore.getState().preferences.theme).toBe('dark')
   })
 
@@ -42,7 +42,10 @@ describe('preferencesStore', () => {
 
   it('keeps working when the repository cannot persist', () => {
     // Simulates a full or blocked store: `save` is a no-op, `load` never sees the write.
-    const failing = { load: () => ({ version: 1, theme: 'system' }) as const, save: () => {} }
+    const failing = {
+      load: () => ({ version: 1, theme: 'system', parentNames: { a: '', b: '' } }) as const,
+      save: () => {},
+    }
     usePreferencesStore.getState().hydrate(failing)
 
     usePreferencesStore.getState().setTheme('dark')
@@ -50,5 +53,37 @@ describe('preferencesStore', () => {
     // The session still reflects the choice even though nothing was persisted — the UI must
     // not depend on the write succeeding.
     expect(usePreferencesStore.getState().preferences.theme).toBe('dark')
+  })
+
+  it('remembers one parent name and persists it', () => {
+    const repo = createMemoryPreferences()
+    usePreferencesStore.getState().hydrate(repo)
+
+    usePreferencesStore.getState().setParentName('a', 'Jane')
+
+    expect(usePreferencesStore.getState().preferences.parentNames).toEqual({ a: 'Jane', b: '' })
+    expect(repo.load().parentNames).toEqual({ a: 'Jane', b: '' })
+  })
+
+  it('clears both saved names without touching the theme', () => {
+    const repo = createMemoryPreferences()
+    usePreferencesStore.getState().hydrate(repo)
+    usePreferencesStore.getState().setTheme('dark')
+    usePreferencesStore.getState().setParentName('a', 'Jane')
+    usePreferencesStore.getState().setParentName('b', 'John')
+
+    usePreferencesStore.getState().clearParentNames()
+
+    expect(usePreferencesStore.getState().preferences.parentNames).toEqual({ a: '', b: '' })
+    expect(usePreferencesStore.getState().preferences.theme).toBe('dark')
+    expect(repo.load().parentNames).toEqual({ a: '', b: '' })
+  })
+
+  it('keeps saved parent names when the worksheet is reset', () => {
+    usePreferencesStore.getState().setParentName('a', 'Jane')
+
+    useWorksheetStore.getState().reset()
+
+    expect(usePreferencesStore.getState().preferences.parentNames.a).toBe('Jane')
   })
 })

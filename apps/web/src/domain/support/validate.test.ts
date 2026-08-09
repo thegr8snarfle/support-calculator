@@ -104,6 +104,29 @@ describe('validateWorksheet', () => {
     })
   })
 
+  describe('parent names', () => {
+    it('rejects a blank name', () => {
+      const input = worksheet()
+      input.parties.a.name = ''
+      const errors = validateWorksheet(input, rules)
+      expect(idsOf(errors)).toContain('parties.a.name.required')
+      expect(errors[0].fields).toEqual([fieldIds.partyName('a')])
+    })
+
+    it('rejects a whitespace-only name', () => {
+      const input = worksheet()
+      input.parties.b.name = '   '
+      expect(idsOf(validateWorksheet(input, rules))).toContain('parties.b.name.required')
+    })
+
+    it('accepts a real name', () => {
+      const input = worksheet()
+      input.parties.a.name = 'Jane'
+      input.parties.b.name = 'John'
+      expect(validateWorksheet(input, rules)).toEqual([])
+    })
+  })
+
   describe('children', () => {
     it('rejects zero children', () => {
       expect(idsOf(validateWorksheet(worksheet({ childrenCount: 0 }), rules))).toContain(
@@ -182,8 +205,10 @@ describe('validateWorksheet', () => {
 
   it('returns errors in form order so the summary reads top to bottom', () => {
     const input = worksheet({ childrenCount: 0, parentingTime: { a: 900, b: 900 } })
+    input.parties.a.name = ''
     input.income.gross.a = -1
     expect(idsOf(validateWorksheet(input, rules))).toEqual([
+      'parties.a.name.required',
       'childrenCount.range',
       'income.gross.a.invalid',
       'parentingTime.a.range',

@@ -52,14 +52,14 @@ describe('useTheme', () => {
 
 describe('ThemeProvider', () => {
   it('applies a stored preference to the document', () => {
-    setup({ version: 1, theme: 'dark' })
+    setup({ version: 1, theme: 'dark', parentNames: { a: '', b: '' } })
     expect(screen.getByText('pref:dark')).toBeInTheDocument()
     expect(themeAttr()).toBe('dark')
   })
 
   it('resolves system against the OS', () => {
     setPrefersDark(true)
-    setup({ version: 1, theme: 'system' })
+    setup({ version: 1, theme: 'system', parentNames: { a: '', b: '' } })
 
     // The preference stays 'system' — only the resolved value is dark.
     expect(screen.getByText('pref:system')).toBeInTheDocument()
@@ -68,7 +68,7 @@ describe('ThemeProvider', () => {
   })
 
   it('follows the OS live while set to system', () => {
-    setup({ version: 1, theme: 'system' })
+    setup({ version: 1, theme: 'system', parentNames: { a: '', b: '' } })
     expect(themeAttr()).toBe('light')
 
     // The user changes their OS theme with the app open.
@@ -79,7 +79,7 @@ describe('ThemeProvider', () => {
   })
 
   it('stops following the OS once a theme is pinned', () => {
-    setup({ version: 1, theme: 'light' })
+    setup({ version: 1, theme: 'light', parentNames: { a: '', b: '' } })
 
     act(() => setPrefersDark(true))
 

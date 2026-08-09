@@ -4,7 +4,7 @@ import { WorksheetRecap } from './WorksheetRecap'
 import { useStepFlow } from '../../navigation'
 import { useWorksheetStore } from '../store/worksheetStore'
 import { useSupportEstimate } from '../hooks/useSupportEstimate'
-import { formatUsd } from '../../../lib/format'
+import { formatUsd, truncateName } from '../../../lib/format'
 
 /**
  * The Review step of the guided flow (Worksheet → Review → Results). A read-only,
@@ -44,7 +44,8 @@ export function ReviewPage() {
           <span className="text-[16px] font-semibold text-text-muted">/mo</span>
         </div>
         <p className="mt-1 text-[14px] text-text-muted m-0">
-          {parties[estimate?.payer ?? 'b'].name} pays {parties[estimate?.recipient ?? 'a'].name} each month.
+          {truncateName(parties[estimate?.payer ?? 'b'].name)} pays{' '}
+          {truncateName(parties[estimate?.recipient ?? 'a'].name)} each month.
         </p>
       </Card>
 

@@ -10,7 +10,7 @@ import { ActiveStatuteBadge } from '../../statutes'
 import { ParentingTimeBar } from './ParentingTimeBar'
 import { ResultsRail } from './ResultsRail'
 import { SupportCitation } from './SupportCitation'
-import { CountField, MoneyField } from './WorksheetFields'
+import { CountField, MoneyField, NameField } from './WorksheetFields'
 import { ValidationSummary } from './ValidationSummary'
 import { WORKSHEET_SECTIONS } from '../sections'
 import { useStepFlow } from '../../navigation'
@@ -21,6 +21,12 @@ import { useWorksheetStatus } from '../hooks/useWorksheetStatus'
 import { useValidation } from '../hooks/useValidation'
 import { fieldIds } from '../../../domain/support'
 import { EMPTY_ESTIMATE } from '../estimateDefaults'
+import { truncateName } from '../../../lib/format'
+import type { Party } from '../../../types/common'
+// Cross-feature import, same as `AppHeader.tsx` — parent names are remembered as a
+// preference (`services/preferences`), not worksheet input, so persisting them goes
+// through the preferences store rather than `worksheetStore`.
+import { usePreferencesStore } from '../../preferences'
 
 /**
  * The Colorado child-support worksheet.
@@ -40,14 +46,34 @@ export function WorksheetPage() {
   useWorksheetStatus(estimate)
 
   const input = useWorksheetStore((s) => s.input)
+  const setPartyName = useWorksheetStore((s) => s.setPartyName)
   const setChildrenCount = useWorksheetStore((s) => s.setChildrenCount)
   const setIncome = useWorksheetStore((s) => s.setIncome)
   const setNights = useWorksheetStore((s) => s.setNights)
   const setAddOn = useWorksheetStore((s) => s.setAddOn)
   const setAddOnPayer = useWorksheetStore((s) => s.setAddOnPayer)
 
+  const savedParentNames = usePreferencesStore((s) => s.preferences.parentNames)
+  const setSavedParentName = usePreferencesStore((s) => s.setParentName)
+  const clearSavedParentNames = usePreferencesStore((s) => s.clearParentNames)
+  const anyNameSaved = savedParentNames.a !== '' || savedParentNames.b !== ''
+
+  // Every keystroke updates the live worksheet (so labels elsewhere update as you type) and
+  // writes through to the remembered preference in the same action — mirrors `setTheme`'s
+  // "write through immediately" pattern, just with two stores instead of one.
+  const handleNameChange = (party: Party, name: string) => {
+    setPartyName(party, name)
+    setSavedParentName(party, name)
+  }
+
   const nameA = input.parties.a.name
   const nameB = input.parties.b.name
+  // Truncated for display only — the input's own value and every aria-label below keep the
+  // full name; only these two are safe to hand to layouts that can't wrap (PartyHeader,
+  // ParentingTimeBar, AddOnPayerToggle, ResultsRail).
+  const nameADisplay = truncateName(nameA)
+  const nameBDisplay = truncateName(nameB)
+  const partyDisplayName = (party: Party) => (party === 'a' ? nameADisplay : nameBDisplay)
 
   // Drives the standing advisory in section 4. Read from the input rather than from the
   // estimate's warnings so it still shows while the estimate is stale or the rules are
@@ -107,14 +133,50 @@ export function WorksheetPage() {
       <div className="grid gap-8 items-start lg:grid-cols-[1fr_340px]">
         {/* LEFT: worksheet */}
         <div>
-          {/* 1. Children */}
+          {/* 1. About this case */}
           <Card
             id={WORKSHEET_SECTIONS.children}
             step={1}
-            title="Children in this case"
-            hint="How many children is this support order for?"
+            title="About this case"
+            hint="Names appear throughout your worksheet, review, and results."
           >
-            <div className="flex items-center gap-4">
+            <PartyHeader nameA={nameADisplay || 'Parent A'} nameB={nameBDisplay || 'Parent B'} />
+            <FieldRow
+              label="Parent's name"
+              divider={false}
+              a={
+                <NameField
+                  label={`Parent A's name`}
+                  value={nameA}
+                  onCommit={(v) => handleNameChange('a', v)}
+                  fieldId={fieldIds.partyName('a')}
+                  error={fieldErrors[fieldIds.partyName('a')]}
+                />
+              }
+              b={
+                <NameField
+                  label={`Parent B's name`}
+                  value={nameB}
+                  onCommit={(v) => handleNameChange('b', v)}
+                  fieldId={fieldIds.partyName('b')}
+                  error={fieldErrors[fieldIds.partyName('b')]}
+                />
+              }
+            />
+            {anyNameSaved && (
+              <div className="mt-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={clearSavedParentNames}
+                  title="Forget these names so they don't fill in next time"
+                  className="text-[12px] font-semibold text-primary rounded-sm px-1 py-0.5 hover:underline focus-ring cursor-pointer"
+                >
+                  Clear saved names
+                </button>
+              </div>
+            )}
+
+            <div className="mt-4 flex items-center gap-4">
               <NumberStepper
                 label="Children in this case"
                 value={input.childrenCount}
@@ -139,7 +201,7 @@ export function WorksheetPage() {
               <HelpTip label="Use gross income before taxes and deductions — wages, salary, tips, and self-employment net income." />
             }
           >
-            <PartyHeader nameA={nameA} nameB={nameB} />
+            <PartyHeader nameA={nameADisplay} nameB={nameBDisplay} />
             {(rules?.incomeLines ?? []).map((line, i) => (
               <FieldRow
                 key={line.id}
@@ -201,8 +263,8 @@ export function WorksheetPage() {
               }
             />
             <ParentingTimeBar
-              nameA={nameA}
-              nameB={nameB}
+              nameA={nameADisplay}
+              nameB={nameBDisplay}
               nightsA={input.parentingTime.a}
               nightsB={input.parentingTime.b}
               yearNights={rules?.yearNights ?? 365}
@@ -240,8 +302,8 @@ export function WorksheetPage() {
                   meta={
                     <AddOnPayerToggle
                       lineLabel={line.label}
-                      nameA={nameA}
-                      nameB={nameB}
+                      nameA={nameADisplay}
+                      nameB={nameBDisplay}
                       value={entry?.paidBy}
                       onChange={(party) => setAddOnPayer(line.id, party)}
                       error={fieldErrors[fieldIds.addOnPayer(line.id)]}
@@ -268,11 +330,11 @@ export function WorksheetPage() {
           <ResultsRail
             estimate={estimate ?? EMPTY_ESTIMATE}
             stale={stale}
-            payer={estimate ? input.parties[estimate.payer].name : nameB}
-            recipient={estimate ? input.parties[estimate.recipient].name : nameA}
-            nameA={nameA}
-            nameB={nameB}
-            netLabel={`${estimate ? input.parties[estimate.payer].name : nameB}'s share, net`}
+            payer={estimate ? partyDisplayName(estimate.payer) : nameBDisplay}
+            recipient={estimate ? partyDisplayName(estimate.recipient) : nameADisplay}
+            nameA={nameADisplay}
+            nameB={nameBDisplay}
+            netLabel={`${estimate ? partyDisplayName(estimate.payer) : nameBDisplay}'s share, net`}
             onReview={next}
             citation={<SupportCitation />}
           />

@@ -1,11 +1,16 @@
 /**
  * User preference types — the settings that survive between sessions.
  *
- * Deliberately narrow. Preferences are *UI choices*, not user data: nothing here should
- * ever identify a person or describe their finances. The worksheet's income, overnights
- * and children counts are intentionally absent, and adding them is a decision that needs a
- * visible "clear my data" affordance rather than a quiet field addition here.
+ * Deliberately narrow. Preferences are *UI choices*, not user data: the worksheet's income,
+ * overnights and children counts are intentionally absent — persisting them is a product
+ * decision needing a visible "clear my data" affordance, not a quiet field addition here.
+ *
+ * `parentNames` is the one deliberate exception to "never identify a person": first names
+ * only, never leaves the device, no financial or case data attached. It ships with exactly
+ * the affordance this file used to say such a field would need — a "Clear saved names"
+ * control in the worksheet UI (`WorksheetPage`) that wipes the persisted value on request.
  */
+import type { Party } from './common'
 
 /**
  * The theme setting as the user expressed it — which is not the same as the theme that
@@ -31,10 +36,13 @@ export type ResolvedTheme = 'light' | 'dark'
 export type Preferences = {
   version: 1
   theme: ThemePreference
+  /** Remembered worksheet party names, so a returning user isn't retyping them. */
+  parentNames: Record<Party, string>
 }
 
 /** Used on first run, and whenever stored data is missing, corrupt or unreadable. */
 export const DEFAULT_PREFERENCES: Preferences = {
   version: 1,
   theme: 'system',
+  parentNames: { a: '', b: '' },
 }

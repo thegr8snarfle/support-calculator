@@ -6,7 +6,7 @@ import { ParentingTimeBar } from './ParentingTimeBar'
 import { WORKSHEET_SECTIONS } from '../sections'
 import { useWorksheetStore } from '../store/worksheetStore'
 import { useRules } from '../hooks/useRules'
-import { formatUsd } from '../../../lib/format'
+import { formatUsd, truncateName } from '../../../lib/format'
 
 export type WorksheetRecapProps = {
   /**
@@ -27,6 +27,11 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
   const { parties, childrenCount, income, parentingTime, addOns } = input
   const incomeLines = rules?.incomeLines ?? []
   const addOnLines = rules?.addOnLines ?? []
+  // Read-only recap: every name below is for display, so these truncated variants are the
+  // only ones used — there is no input value or aria-label here that needs the full name.
+  const nameA = truncateName(parties.a.name)
+  const nameB = truncateName(parties.b.name)
+  const partyDisplayName = { a: nameA, b: nameB }
 
   // Carries the documentation/agreement advisory onto Review *and* the printable Results
   // page — the latter being the artefact a user is most likely to take to a hearing.
@@ -39,18 +44,24 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
 
   return (
     <>
-      {/* 1 · Children */}
-      <RecapCard step={1} title="Children in this case" action={edit(WORKSHEET_SECTIONS.children, 'children')}>
+      {/* 1 · About this case */}
+      <RecapCard step={1} title="About this case" action={edit(WORKSHEET_SECTIONS.children, 'this case')}>
+        <PartyHeader nameA={nameA} nameB={nameB} />
+        <FieldRow
+          label="Parent's name"
+          divider={false}
+          a={<RecapValue>{nameA}</RecapValue>}
+          b={<RecapValue>{nameB}</RecapValue>}
+        />
         <FieldRow
           label="Children eligible for support"
-          divider={false}
           wide={<RecapValue>{childrenCount}</RecapValue>}
         />
       </RecapCard>
 
       {/* 2 · Monthly income */}
       <RecapCard step={2} title="Monthly income" action={edit(WORKSHEET_SECTIONS.income, 'monthly income')}>
-        <PartyHeader nameA={parties.a.name} nameB={parties.b.name} />
+        <PartyHeader nameA={nameA} nameB={nameB} />
         {incomeLines.map((line, i) => {
           const row = income[line.id] ?? { a: 0, b: 0 }
           return (
@@ -69,8 +80,8 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
       {/* 3 · Parenting time */}
       <RecapCard step={3} title="Parenting time" action={edit(WORKSHEET_SECTIONS.parenting, 'parenting time')}>
         <ParentingTimeBar
-          nameA={parties.a.name}
-          nameB={parties.b.name}
+          nameA={nameA}
+          nameB={nameB}
           nightsA={parentingTime.a}
           nightsB={parentingTime.b}
           yearNights={rules?.yearNights}
@@ -85,7 +96,7 @@ export function WorksheetRecap({ onEdit }: WorksheetRecapProps) {
           // $0 attribution is not a credit.
           const carrier =
             entry?.paidBy !== undefined && entry.amount > 0
-              ? parties[entry.paidBy].name
+              ? partyDisplayName[entry.paidBy]
               : null
           return (
             <FieldRow

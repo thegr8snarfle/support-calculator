@@ -11,8 +11,28 @@ import { DEFAULT_PREFERENCES } from '../../types/preferences'
 
 describe('parsePreferences', () => {
   it('reads a valid record', () => {
+    const raw = JSON.stringify({ version: 1, theme: 'dark', parentNames: { a: 'Jane', b: 'John' } })
+    expect(parsePreferences(raw)).toEqual({
+      version: 1,
+      theme: 'dark',
+      parentNames: { a: 'Jane', b: 'John' },
+    })
+  })
+
+  it('defaults parentNames on a record written before that field existed', () => {
+    // A pre-parentNames record is older, not corrupt — it should keep its theme rather than
+    // being discarded wholesale for a field it never had a chance to set.
     const raw = JSON.stringify({ version: 1, theme: 'dark' })
-    expect(parsePreferences(raw)).toEqual({ version: 1, theme: 'dark' })
+    expect(parsePreferences(raw)).toEqual({
+      version: 1,
+      theme: 'dark',
+      parentNames: { a: '', b: '' },
+    })
+  })
+
+  it('falls back to full defaults when parentNames has the wrong shape', () => {
+    const raw = JSON.stringify({ version: 1, theme: 'dark', parentNames: { a: 1, b: 2 } })
+    expect(parsePreferences(raw)).toEqual(DEFAULT_PREFERENCES)
   })
 
   it('defaults when nothing is stored', () => {

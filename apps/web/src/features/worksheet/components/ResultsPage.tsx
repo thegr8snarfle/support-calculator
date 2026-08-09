@@ -7,7 +7,7 @@ import { useStepFlow } from '../../navigation'
 import { useWorksheetStore } from '../store/worksheetStore'
 import { useSupportEstimate } from '../hooks/useSupportEstimate'
 import { EMPTY_ESTIMATE } from '../estimateDefaults'
-import { formatUsd } from '../../../lib/format'
+import { formatUsd, truncateName } from '../../../lib/format'
 
 /**
  * The Results step of the guided flow (Worksheet → Review → Results). A complete,
@@ -21,8 +21,10 @@ export function ResultsPage() {
   const parties = useWorksheetStore((s) => s.input.parties)
   const { estimate } = useSupportEstimate()
   const e = estimate ?? EMPTY_ESTIMATE
-  const payerName = parties[e.payer].name
-  const recipientName = parties[e.recipient].name
+  // Truncated for display — WorksheetRecap below reads the store directly and truncates its
+  // own copies, so the full name is never touched here, only these local display variants.
+  const payerName = truncateName(parties[e.payer].name)
+  const recipientName = truncateName(parties[e.recipient].name)
   return (
     <div className="max-w-[720px]">
       <div className="mb-6">
@@ -59,8 +61,8 @@ export function ResultsPage() {
       <Card title="How this was calculated">
         <EstimateBreakdown
           estimate={e}
-          nameA={parties.a.name}
-          nameB={parties.b.name}
+          nameA={truncateName(parties.a.name)}
+          nameB={truncateName(parties.b.name)}
           netLabel={`${payerName}’s share, net`}
           size="full"
         />

@@ -26,6 +26,11 @@ import type { ValidationError, WorksheetInput } from '../../types/support'
  * input) go through these helpers, so the two can never drift apart over a typo'd string.
  */
 export const fieldIds = {
+  /**
+   * One parent's name.
+   * @param party - Which parent.
+   */
+  partyName: (party: Party): string => `parties.${party}.name`,
   /** The children-count stepper. */
   childrenCount: 'childrenCount',
   /**
@@ -83,6 +88,20 @@ export function validateWorksheet(
   rules: SupportRuleSet,
 ): ValidationError[] {
   const errors: ValidationError[] = []
+
+  // --- Parent names ---------------------------------------------------------------
+  // First in form order: names now sit above the children count in the merged "About this
+  // case" card, and every downstream sentence ("X pays Y each month") depends on both being
+  // real names rather than empty strings.
+  for (const party of PARTIES) {
+    if (input.parties[party].name.trim() === '') {
+      errors.push({
+        id: `parties.${party}.name.required`,
+        message: 'Enter a name for this parent.',
+        fields: [fieldIds.partyName(party)],
+      })
+    }
+  }
 
   // --- Children -----------------------------------------------------------------
   // Defensive only: `NumberStepper` already disables at both bounds, so this can only

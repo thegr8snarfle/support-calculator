@@ -15,6 +15,7 @@
  * this whole feature exists to remove.
  */
 import { create } from 'zustand'
+import type { Party } from '../../../types/common'
 import type { Preferences, ThemePreference } from '../../../types/preferences'
 import {
   defaultPreferencesRepository,
@@ -26,6 +27,14 @@ export type PreferencesState = {
 
   /** Set the theme preference and persist it. */
   setTheme: (theme: ThemePreference) => void
+  /** Remember one parent's name and persist it. */
+  setParentName: (party: Party, name: string) => void
+  /**
+   * Forget both saved parent names, without touching the live worksheet input — only the
+   * *next* load starts blank again. The visible "clear my data" affordance this preference
+   * needs, per `types/preferences.ts`.
+   */
+  clearParentNames: () => void
   /**
    * Re-read preferences from a repository, replacing the one used for future writes.
    * Tests use this to inject an in-memory repository; the app never calls it.
@@ -52,6 +61,23 @@ export const usePreferencesStore = create<PreferencesState>((set) => ({
       const next: Preferences = { ...s.preferences, theme }
       // Write through immediately. If storage is full or blocked this is a silent no-op and
       // the value still applies for the session — the UI must not depend on the write.
+      repository.save(next)
+      return { preferences: next }
+    }),
+
+  setParentName: (party, name) =>
+    set((s) => {
+      const next: Preferences = {
+        ...s.preferences,
+        parentNames: { ...s.preferences.parentNames, [party]: name },
+      }
+      repository.save(next)
+      return { preferences: next }
+    }),
+
+  clearParentNames: () =>
+    set((s) => {
+      const next: Preferences = { ...s.preferences, parentNames: { a: '', b: '' } }
       repository.save(next)
       return { preferences: next }
     }),

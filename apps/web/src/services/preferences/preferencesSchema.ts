@@ -17,10 +17,17 @@ import { DEFAULT_PREFERENCES, type Preferences } from '../../types/preferences'
  * `version` is a literal, not a number: a record written by a future build with `version: 2`
  * must fail this parse and fall back, rather than being read with v2 semantics by v1 code.
  * When a v2 ships, this becomes a discriminated union plus a migration step.
+ *
+ * `parentNames` has a `.default()`, unlike every other field — a deliberate, narrow exception
+ * to "no partial merge" below. That invariant guards against trusting a *corrupt* record; a
+ * record written by the previous build, before this field existed, is not corrupt, just older.
+ * Defaulting the one new key lets it keep its `theme` instead of losing it to a field it never
+ * had a chance to set.
  */
 export const preferencesSchema = z.object({
   version: z.literal(1),
   theme: z.enum(['light', 'dark', 'system']),
+  parentNames: z.object({ a: z.string(), b: z.string() }).default({ a: '', b: '' }),
 })
 
 /**

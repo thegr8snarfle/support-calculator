@@ -16,6 +16,7 @@ import type { ReactNode } from 'react'
 import { CurrencyInput } from '../../../components/ui/CurrencyInput'
 import { ErrorTip } from '../../../components/ui/ErrorTip'
 import { NumberInput } from '../../../components/ui/NumberInput'
+import { TextInput } from '../../../components/ui/TextInput'
 import { parseCount, parseUsd } from '../../../lib/format'
 import { useNumericField } from '../hooks/useNumericField'
 
@@ -52,6 +53,45 @@ function resolveMessage(
  */
 function FieldShell({ children }: { children: ReactNode }) {
   return <span className="group relative block">{children}</span>
+}
+
+export type NameFieldProps = {
+  label: string
+  value: string
+  onCommit: (next: string) => void
+  /**
+   * Canonical field id from `fieldIds` (`domain/support/validate.ts`), applied as the
+   * input's DOM `id` so the validation summary can move focus straight to it.
+   */
+  fieldId: string
+  /** Validation message for this input, from `useValidation().fieldErrors`. */
+  error?: string
+}
+
+/**
+ * A parent's name, bound directly to the store.
+ *
+ * Unlike `MoneyField`/`CountField` this skips `useNumericField` entirely — free text has no
+ * "unparseable" state to guard against, so every keystroke commits straight through and the
+ * only message ever shown is the validation error.
+ */
+export function NameField({ label, value, onCommit, fieldId, error }: NameFieldProps) {
+  const tipId = useId()
+
+  return (
+    <FieldShell>
+      <TextInput
+        id={fieldId}
+        aria-label={label}
+        placeholder="Full name"
+        value={value}
+        onChange={(e) => onCommit(e.target.value)}
+        error={error !== undefined}
+        aria-describedby={error !== undefined ? tipId : undefined}
+      />
+      {error !== undefined && <ErrorTip id={tipId} message={error} />}
+    </FieldShell>
+  )
 }
 
 export type MoneyFieldProps = {

@@ -18,6 +18,10 @@ import {
   defaultRulesRepository,
   type RulesRepository,
 } from '../../../services/rules'
+import {
+  defaultPreferencesRepository,
+  type PreferencesRepository,
+} from '../../../services/preferences'
 import { DEFAULT_INPUT } from '../../../mocks/supportFixtures'
 
 export type RulesStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -38,8 +42,35 @@ export type WorksheetState = {
   loadRules: (repo?: RulesRepository, jurisdiction?: string) => Promise<void>
 }
 
+/**
+ * Overlay a saved parent-name preference onto a worksheet input.
+ *
+ * Reads the preferences **repository** directly, not the `preferencesStore` Zustand store —
+ * that would couple this store to another feature's store; the repository is the same
+ * app-level port `loadRules` already reads through (`services/rules`). A saved name wins only
+ * when non-blank, so a fresh install with nothing saved yet still shows the seeded demo names.
+ * Exported as a pure function so it's testable with a fake repository, independent of the
+ * live singleton's module-init timing.
+ *
+ * @param input - The worksheet input to overlay names onto.
+ * @param repo - The preferences repository to read from; defaults to the app singleton.
+ */
+export function applySavedParentNames(
+  input: WorksheetInput,
+  repo: PreferencesRepository = defaultPreferencesRepository,
+): WorksheetInput {
+  const saved = repo.load().parentNames
+  return {
+    ...input,
+    parties: {
+      a: { name: saved.a || input.parties.a.name },
+      b: { name: saved.b || input.parties.b.name },
+    },
+  }
+}
+
 /** Seeded with the example worksheet so the app has something to show immediately. */
-const INITIAL_INPUT: WorksheetInput = structuredClone(DEFAULT_INPUT)
+const INITIAL_INPUT: WorksheetInput = applySavedParentNames(structuredClone(DEFAULT_INPUT))
 
 export const useWorksheetStore = create<WorksheetState>((set, get) => ({
   input: INITIAL_INPUT,

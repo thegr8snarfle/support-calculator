@@ -15,6 +15,22 @@ export function formatPercent(value: number): string {
   return `${value}%`
 }
 
+/** Longest a party name renders as, before {@link truncateName} ellipsizes it. */
+export const NAME_DISPLAY_MAX = 15
+
+/**
+ * Truncate a party name for **display only** — never for the editable input value or an
+ * `aria-label`, both of which need the real name. Without this, a long name breaks several
+ * fixed-width layouts: it can blow past its column in `PartyHeader`, get clipped mid-word
+ * inside a narrow `ParentingTimeBar` segment, or overflow a `SegmentedToggle` pill.
+ *
+ * @param name - The full name as stored.
+ * @param max - Characters to keep before the ellipsis (default {@link NAME_DISPLAY_MAX}).
+ */
+export function truncateName(name: string, max: number = NAME_DISPLAY_MAX): string {
+  return name.length > max ? `${name.slice(0, max)}…` : name
+}
+
 const LONG_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
   month: 'long',

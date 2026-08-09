@@ -3,9 +3,10 @@
  * failure paths are covered with plain fakes — no module mocking.
  */
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useWorksheetStore } from './worksheetStore'
+import { applySavedParentNames, useWorksheetStore } from './worksheetStore'
 import { DEFAULT_INPUT } from '../../../mocks/supportFixtures'
 import { createStaticRulesRepository } from '../../../services/rules/staticRulesRepository'
+import { createMemoryPreferences } from '../../../services/preferences'
 import type { RulesRepository } from '../../../services/rules'
 import type { SupportRuleSet } from '../../../types/rules'
 
@@ -100,6 +101,25 @@ describe('input actions', () => {
     expect(useWorksheetStore.getState().input.childrenCount).toBe(
       DEFAULT_INPUT.childrenCount,
     )
+  })
+})
+
+describe('applySavedParentNames', () => {
+  it('prefers a saved, non-blank name over the input default', () => {
+    const repo = createMemoryPreferences({
+      version: 1,
+      theme: 'system',
+      parentNames: { a: 'Jane', b: '' },
+    })
+    const result = applySavedParentNames(structuredClone(DEFAULT_INPUT), repo)
+    expect(result.parties.a.name).toBe('Jane')
+  })
+
+  it('falls back to the input default when nothing is saved', () => {
+    const repo = createMemoryPreferences()
+    const result = applySavedParentNames(structuredClone(DEFAULT_INPUT), repo)
+    expect(result.parties.a.name).toBe(DEFAULT_INPUT.parties.a.name)
+    expect(result.parties.b.name).toBe(DEFAULT_INPUT.parties.b.name)
   })
 })
 

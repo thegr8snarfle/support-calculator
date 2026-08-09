@@ -145,12 +145,23 @@ A field can be invalid two ways at once (unparseable draft *and* a validation er
 
 User preferences persist between sessions via `src/services/preferences/` (port + adapters,
 mirroring `services/rules`) and `src/features/preferences/` (store, `ThemeProvider`,
-`useTheme`). The theme is the only tenant today.
+`useTheme`). The theme was the only tenant at first; `parentNames` (below) is the second.
 
 - **Preferences are UI choices, not user data.** Worksheet input — income, overnights,
   children — is deliberately **not** persisted. A shared laptop should not silently retain
   someone's finances. Persisting it is a product decision needing a visible "clear my data"
   affordance, not a field added to `Preferences`.
+- **`parentNames` is the one deliberate exception.** It *does* identify a person, unlike
+  every other preference, but narrowly: first names only, never leaves the device, no
+  financial or case data attached. `WorksheetPage`'s two name fields (folded into the
+  worksheet's "About this case" card, `src/features/worksheet/components/WorksheetPage.tsx`)
+  write through to both `worksheetStore` (live, for the session) and `preferencesStore` (so a
+  returning user isn't retyping them), and the card carries the required "Clear saved names"
+  affordance next to them. `worksheetStore`'s `applySavedParentNames` seeds a fresh worksheet
+  from the saved preference at module init, reading the preferences **repository** directly
+  (not the `preferencesStore` Zustand store) to avoid coupling one feature's store to
+  another's — the same pattern `loadRules` already uses for `services/rules`. A blank name is
+  a blocking `ValidationError` (`domain/support/validate.ts`), same as every other field.
 - **Storage is a trust boundary.** `localStorage` is user-editable, so every read goes
   through `parsePreferences` (Zod) and falls back to defaults — same discipline as
   `parseRuleSet`. A `version` literal means a future shape is *rejected*, not misread.

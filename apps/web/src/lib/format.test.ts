@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { formatUsd, formatPercent, parseUsd, parseCount, formatIsoDateLong } from './format'
+import {
+  formatUsd,
+  formatPercent,
+  parseUsd,
+  parseCount,
+  formatIsoDateLong,
+  truncateName,
+  NAME_DISPLAY_MAX,
+} from './format'
 
 describe('formatUsd', () => {
   it('formats whole dollars with separators', () => {
@@ -51,6 +59,24 @@ describe('formatIsoDateLong', () => {
     // UTC-5 zone) would misread this as the last day of February.
     expect(formatIsoDateLong('2026-03-01')).not.toContain('Feb')
     expect(formatIsoDateLong('2026-01-01')).toBe('January 1, 2026')
+  })
+})
+
+describe('truncateName', () => {
+  it('leaves a name at or under the limit untouched', () => {
+    expect(truncateName('Jane')).toBe('Jane')
+    expect(truncateName('A'.repeat(NAME_DISPLAY_MAX))).toBe('A'.repeat(NAME_DISPLAY_MAX))
+  })
+
+  it('ellipsizes anything over 15 characters', () => {
+    const long = 'Jonathan Alexander Smith-O\'Brien'
+    const result = truncateName(long)
+    expect(result).toBe(`${long.slice(0, 15)}…`)
+    expect(result.length).toBe(16) // 15 kept characters + the ellipsis mark
+  })
+
+  it('honors a custom limit', () => {
+    expect(truncateName('Jane', 2)).toBe('Ja…')
   })
 })
 

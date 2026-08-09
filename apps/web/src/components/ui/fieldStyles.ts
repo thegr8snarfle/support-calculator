@@ -1,7 +1,13 @@
-/** Shared visual styles for text-like input fields (currency, number). */
+/** Shared visual styles for text-like input fields (currency, number, free text). */
 
 export const fieldBase =
   'w-full h-10 rounded-md border bg-surface text-text text-right text-[15px] num ' +
+  'placeholder:text-text-subtle focus:outline-none'
+
+/** Same shell as {@link fieldBase}, left-aligned with no tabular-figure numerals — for
+ * free text (e.g. a parent's name) rather than a number. */
+export const fieldBaseText =
+  'w-full h-10 rounded-md border bg-surface text-text text-left text-[15px] ' +
   'placeholder:text-text-subtle focus:outline-none'
 
 /** Border/focus classes for the default vs error field state. */

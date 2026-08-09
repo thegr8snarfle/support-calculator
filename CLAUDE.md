@@ -354,14 +354,24 @@ reference material.
   worksheet is clean. Bounds come from the rule set, so validation is jurisdiction-agnostic
   like the engine. See `apps/web/CLAUDE.md` → _Validation_.
 - **User preferences persist between sessions** (`src/services/preferences/` port + adapters,
-  `src/features/preferences/` store + `ThemeProvider`/`useTheme`). The theme is the first and
-  only tenant: a three-state **Light / Dark / System** toggle defaulting to `system`, so a
+  `src/features/preferences/` store + `ThemeProvider`/`useTheme`). The theme was the first
+  tenant: a three-state **Light / Dark / System** toggle defaulting to `system`, so a
   dark-mode machine gets a dark app on first run and can hand control back to the OS.
   `public/theme-init.js` — a **classic, non-deferred** script, because inline script is
   blocked by the Tauri CSP — applies the stored theme before first paint, so there is no
   flash. Storage is a Zod-validated trust boundary that falls back to defaults and never
   throws. **Worksheet input is deliberately not persisted** (shared-computer privacy); see
   `apps/web/CLAUDE.md` → _Preferences & persistence_. Needs no Tauri plugin, Rust, or CSP change.
+- **Both parents' names can now be entered on the worksheet** (folded into the first
+  "About this case" card, `WorksheetPage.tsx`) and are remembered as the second preferences
+  tenant, `parentNames`. Names update the live worksheet on every keystroke and write through
+  to `preferencesStore` in the same action, so a returning user isn't retyping them; a
+  "Clear saved names" control (shown only once something is saved) wipes the persisted value
+  without touching the in-progress worksheet. This is a deliberate, narrow exception to
+  "preferences never identify a person" — first names only, never leaves the device — and
+  ships with the "clear my data" affordance that exception was already documented as
+  requiring. A blank name is now a blocking validation error, like every other worksheet
+  field. See `apps/web/CLAUDE.md` → _Preferences & persistence_.
 - **Guided-flow navigation is wired** (`src/features/navigation/`): a custom, reducer-backed
   `useStepFlow()` hook (Context provider at the app root) drives Worksheet → Review → Results — the
   header stepper chips, the rail's "Review full worksheet" button, and Review's Back / Edit
@@ -415,6 +425,7 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Worksheet input validation (field errors, frozen estimate) | ✅ | ✅ | ✅ |
 | Persisted user preferences (storage port, Zod boundary) | — | — | ✅ |
 | Theme preference — three-state Light/Dark/System, no flash | ✅ | ✅ | ✅ |
+| Parent names (worksheet fields + persisted preference, "Clear saved names") | — | ✅ | ✅ |
 | Unit tests (Vitest) — engine, data layer, store, navigation | — | — | ✅ |
 | Print / Export PDF | ⬜ | ✅ | ⬜ |
 | Multi-state support (additional jurisdictions) | — | — | ⬜ |

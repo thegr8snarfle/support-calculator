@@ -19,7 +19,7 @@ import { PREFERENCES_KEY } from './preferencesRepository'
 import { createPreferencesRepository } from './index'
 import { DEFAULT_PREFERENCES, type Preferences } from '../../types/preferences'
 
-const DARK: Preferences = { version: 1, theme: 'dark' }
+const DARK: Preferences = { version: 1, theme: 'dark', parentNames: { a: '', b: '' } }
 
 /** A working in-memory stand-in for `Storage`. */
 function fakeStorage(seed: Record<string, string> = {}) {
