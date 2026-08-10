@@ -11,6 +11,12 @@
  */
 import { FieldError } from '../../../components/ui/FieldError'
 import { useValidation } from '../hooks/useValidation'
+import { cn } from '../../../lib/cn'
+
+export type ValidationSummaryProps = {
+  /** e.g. `print:hidden` — this is an editing affordance, not part of a printed summary. */
+  className?: string
+}
 
 /**
  * Move keyboard focus to the input a given error belongs to.
@@ -32,7 +38,7 @@ function focusField(fieldId: string): void {
   el.focus({ preventScroll: true })
 }
 
-export function ValidationSummary() {
+export function ValidationSummary({ className }: ValidationSummaryProps) {
   const { errors } = useValidation()
 
   // Render nothing at all when the worksheet is clean — an empty "no problems" box is
@@ -46,7 +52,7 @@ export function ValidationSummary() {
       // is mid-correction is hostile.
       role="alert"
       aria-labelledby="validation-summary-heading"
-      className="mb-6 rounded-lg border border-alert bg-alert-weak p-4"
+      className={cn('mb-6 rounded-lg border border-alert bg-alert-weak p-4', className)}
     >
       <h2
         id="validation-summary-heading"

@@ -163,3 +163,23 @@ body {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+
+/* ============================================================================
+   Print
+   ----------------------------------------------------------------------------
+   Component-level chrome (header, buttons, sidebar) is hidden per-component
+   via Tailwind's `print:` variant — see ResultsPage/ResultsRail/WorksheetPage/
+   AppHeader. The two rules below are things that variant can't express: page
+   margins, and forcing Columbine's colored surfaces (badges, the hero
+   underline, income-share bar) to survive printing — Chrome/WebKit strip
+   background colors by default unless told otherwise.
+   ========================================================================== */
+@media print {
+  @page {
+    margin: 0.5in;
+  }
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

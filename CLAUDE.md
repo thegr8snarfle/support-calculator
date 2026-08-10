@@ -334,7 +334,20 @@ reference material.
   mockup existed, so it was designed in the Columbine language. The Review and Results recaps
   share one `WorksheetRecap` component; the read-only `RecapCard` / `RecapValue` primitives
   live in `src/components/ui/`. The rail and the Results page also share one
-  `EstimateBreakdown` component. The "Print / Export PDF" button is presentational for now.
+  `EstimateBreakdown` component.
+- **"Print" is wired** (`C.R.S. §14-10-115` — nothing new is calculated, this
+  only renders the already-computed estimate): both the Results page and the sticky rail
+  call `window.print()`, since the OS print dialog on macOS/Windows already offers "Save as
+  PDF" — no new dependency, no generated-file pipeline. Everything that shouldn't appear on
+  paper (`AppHeader`, both buttons, and — when printing from mid-worksheet via the rail — the
+  editable form column) is hidden with Tailwind's `print:` variant; the one thing that
+  variant can't express (`@page` margin, forcing Columbine's colored surfaces to survive
+  printing) is a small `@media print` block in `src/index.css`. The Results page also gained
+  **export-only notes**: a local `notes` field (`ResultsPage.tsx`, via the new `Textarea`
+  primitive) that appears on a printed/saved copy but is never part of `WorksheetInput` —
+  not persisted, not shown on Review, gone on refresh. A print-only plain-text mirror stands
+  in for the editable `<textarea>` when printing, since browsers render textareas
+  inconsistently on paper (clipped height, stray scrollbars).
 - **`src/mocks/`** now seeds the store's default worksheet and gives the unit tests a shared
   realistic input; the domain types it once carried live in `src/types/support.ts`.
 - **Shared costs can be attributed to one parent** (_add-on credits_,
@@ -427,7 +440,7 @@ calculation). Legend: ✅ done · 🎨 mockup only · ⬜ not started · — n/a
 | Theme preference — three-state Light/Dark/System, no flash | ✅ | ✅ | ✅ |
 | Parent names (worksheet fields + persisted preference, "Clear saved names") | — | ✅ | ✅ |
 | Unit tests (Vitest) — engine, data layer, store, navigation | — | — | ✅ |
-| Print / Export PDF | ⬜ | ✅ | ⬜ |
+| Print | ⬜ | ✅ | ✅ |
 | Multi-state support (additional jurisdictions) | — | — | ⬜ |
 | Remote statute source (MCP / RAG adapter) | — | — | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |

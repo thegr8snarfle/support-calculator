@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Card } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
+import { Textarea } from '../../../components/ui/Textarea'
 import { WorksheetRecap } from './WorksheetRecap'
 import { EstimateBreakdown } from './EstimateBreakdown'
 import { SupportCitation } from './SupportCitation'
@@ -15,18 +17,27 @@ import { formatUsd, truncateName } from '../../../lib/format'
  * calculated" breakdown, and a read-only recap of every worksheet input — so a printed
  * Results page stands on its own. Figures come from the live estimate. Designed in the Columbine language (no mockup existed),
  * reusing the results-rail breakdown vocabulary and the shared worksheet recap.
+ *
+ * "Print" is `window.print()`, not a generated file — both macOS and Windows
+ * print dialogs offer "Save as PDF" as a destination, so this needs no new dependency and
+ * no byte-generation step. Everything on-screen that shouldn't appear on paper (this
+ * page's own buttons, the app header) is hidden via Tailwind's `print:` variant instead.
  */
 export function ResultsPage() {
   const { back } = useStepFlow()
   const parties = useWorksheetStore((s) => s.input.parties)
   const { estimate } = useSupportEstimate()
   const e = estimate ?? EMPTY_ESTIMATE
+  // Export-only annotation: local to this page, never part of WorksheetInput. Not
+  // persisted and not shown on Review — it exists purely to appear on a printed/exported
+  // copy of this specific estimate.
+  const [notes, setNotes] = useState('')
   // Truncated for display — WorksheetRecap below reads the store directly and truncates its
   // own copies, so the full name is never touched here, only these local display variants.
   const payerName = truncateName(parties[e.payer].name)
   const recipientName = truncateName(parties[e.recipient].name)
   return (
-    <div className="max-w-[720px]">
+    <div className="max-w-[720px] print:max-w-none">
       <div className="mb-6">
         <div className="text-[12px] font-semibold tracking-[0.09em] uppercase text-accent-strong">
           Child Support · Results
@@ -74,14 +85,45 @@ export function ResultsPage() {
       </h2>
       <WorksheetRecap />
 
+      {/* Editable on screen, hidden on paper — a <textarea> prints inconsistently across
+          browsers (clipped to its visible height, stray scrollbars/resize handles). The
+          plain-text mirror just below is what actually appears when printed. */}
+      <div className="print:hidden mt-8 mb-6">
+        <label
+          htmlFor="export-notes"
+          className="block text-[13px] font-semibold text-text-muted mb-1.5"
+        >
+          Notes for this export{' '}
+          <span className="font-normal text-text-subtle">
+            (optional — appears when you print or save as PDF)
+          </span>
+        </label>
+        <Textarea
+          id="export-notes"
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+          rows={4}
+          placeholder="Add anything you want to remember about this estimate…"
+        />
+      </div>
+      {/* Only rendered when there's something to show, so a worksheet with nothing typed
+          prints exactly as it did before this field existed. */}
+      {notes.trim() && (
+        <div className="hidden print:block mt-8 mb-6">
+          <h2 className="font-display font-semibold text-[18px] tracking-[-0.01em] mb-2">
+            Notes
+          </h2>
+          <p className="whitespace-pre-wrap text-[14px]">{notes}</p>
+        </div>
+      )}
+
       <p className="text-[11.5px] leading-normal text-text-subtle">
         <SupportCitation />
       </p>
 
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-8">
+      <div className="print:hidden flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-8">
         <Button variant="ghost" onClick={back}>Back to review</Button>
-        {/* Export isn't wired yet — presentational until the print/summary layer lands. */}
-        <Button variant="primary">Print / Export PDF</Button>
+        <Button variant="primary" onClick={() => window.print()}>Print</Button>
       </div>
     </div>
   )

@@ -59,3 +59,39 @@ test('navigates Review → Results', async ({ page }) => {
   await page.getByRole('button', { name: 'Results', exact: true }).click()
   await expect(page.getByRole('heading', { name: resultsHeading })).toBeVisible()
 })
+
+test('"Print" calls window.print(), not a file download', async ({ page }) => {
+  // A real OS print dialog can't be driven in CI, so the page's own window.print is
+  // replaced with a flag the test can observe — see ResultsPage's doc comment for why
+  // this button calls window.print() at all rather than generating a file.
+  await page.evaluate(() => {
+    ;(window as unknown as { __printCalled: boolean }).__printCalled = false
+    window.print = () => {
+      ;(window as unknown as { __printCalled: boolean }).__printCalled = true
+    }
+  })
+
+  await page.getByRole('button', { name: 'Review full worksheet' }).click()
+  await page.getByRole('button', { name: 'See full results' }).click()
+  await page.getByRole('button', { name: 'Print' }).click()
+
+  expect(await page.evaluate(() => (window as unknown as { __printCalled: boolean }).__printCalled)).toBe(true)
+})
+
+test('print media hides app chrome and keeps the estimate visible on Results', async ({ page }) => {
+  await page.getByRole('button', { name: 'Review full worksheet' }).click()
+  await page.getByRole('button', { name: 'See full results' }).click()
+  await expect(page.getByRole('heading', { name: resultsHeading })).toBeVisible()
+
+  await page.emulateMedia({ media: 'print' })
+
+  // App chrome: the header (stepper nav, statute/theme buttons) and this page's own
+  // Back/Print buttons are editing/navigation affordances, not part of a printed page.
+  await expect(page.getByRole('button', { name: 'View statute source documents' })).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Back to review' })).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Print' })).toBeHidden()
+
+  // The estimate itself stays visible and printable.
+  await expect(page.getByRole('heading', { name: resultsHeading })).toBeVisible()
+  await expect(page.getByText('Estimated monthly support')).toBeVisible()
+})

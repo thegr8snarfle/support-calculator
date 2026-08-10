@@ -83,13 +83,15 @@ export function ResultsRail(props: ResultsRailProps) {
 
         </div>
 
-        <div className="grid gap-2 px-5 pb-5">
+        <div className="print:hidden grid gap-2 px-5 pb-5">
           {/* Disabled while stale so the gate in `canAdvance` is visible here rather than
               silently swallowing the click in the reducer. */}
           <Button variant="primary" onClick={onReview} disabled={stale}>
             Review full worksheet
           </Button>
-          <Button variant="ghost">Print / Export PDF</Button>
+          {/* window.print() opens the OS print dialog, which offers "Save as PDF" — see
+              ResultsPage for the fuller printable summary this shortcut prints instead of. */}
+          <Button variant="ghost" onClick={() => window.print()}>Print</Button>
         </div>
       </div>
 

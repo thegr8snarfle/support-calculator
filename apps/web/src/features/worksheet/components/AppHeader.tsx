@@ -23,7 +23,7 @@ export function AppHeader({ onOpenStatutes }: AppHeaderProps) {
   const upcoming = nextTheme(theme)
 
   return (
-    <header className="flex items-center gap-4 px-6 py-4 bg-surface border-b border-border">
+    <header className="print:hidden flex items-center gap-4 px-6 py-4 bg-surface border-b border-border">
       <div className="flex items-center gap-3">
         <img
           src="/favicon.svg"

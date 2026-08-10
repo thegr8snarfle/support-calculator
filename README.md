@@ -279,7 +279,7 @@ updated as work lands. Snapshot:
 | Worksheet input validation (field errors, frozen estimate) | ✅ | ✅ | ✅ |
 | Persisted user preferences (storage port, Zod boundary) | — | — | ✅ |
 | Theme preference — three-state Light/Dark/System, no flash | ✅ | ✅ | ✅ |
-| Print / Export PDF | ⬜ | ✅ | ⬜ |
+| Print | ⬜ | ✅ | ✅ |
 | Multi-state support (additional jurisdictions) | — | — | ⬜ |
 | Desktop app (Tauri, `apps/desktop`) — macOS local build | — | — | ✅ |
 | Mobile app (Tauri iOS, `apps/desktop`) — simulator build | — | — | ✅ |

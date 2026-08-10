@@ -120,7 +120,7 @@ export function WorksheetPage() {
 
       <ActiveStatuteBadge />
 
-      <ValidationSummary />
+      <ValidationSummary className="print:hidden" />
 
       {estimate && estimate.warnings.length > 0 && (
         <div className="mb-6 flex flex-col gap-1" role="status">
@@ -130,9 +130,12 @@ export function WorksheetPage() {
         </div>
       )}
 
-      <div className="grid gap-8 items-start lg:grid-cols-[1fr_340px]">
-        {/* LEFT: worksheet */}
-        <div>
+      {/* `print:block` drops the grid at print time — printing from mid-worksheet (via the
+          rail's own Print/Export button) should show the rail as a clean full-width summary,
+          not a 340px sidebar squeezed next to a hidden column. */}
+      <div className="grid gap-8 items-start lg:grid-cols-[1fr_340px] print:block">
+        {/* LEFT: worksheet — hidden when printed; the estimate rail (right) is the summary. */}
+        <div className="print:hidden">
           {/* 1. About this case */}
           <Card
             id={WORKSHEET_SECTIONS.children}

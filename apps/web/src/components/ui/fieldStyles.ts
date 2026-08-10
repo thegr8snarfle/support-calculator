@@ -10,6 +10,12 @@ export const fieldBaseText =
   'w-full h-10 rounded-md border bg-surface text-text text-left text-[15px] ' +
   'placeholder:text-text-subtle focus:outline-none'
 
+/** Multi-line counterpart to {@link fieldBaseText} — a resizable block instead of a
+ * fixed `h-10` row, for free-form text longer than one line (e.g. export notes). */
+export const fieldBaseTextarea =
+  'w-full min-h-[100px] rounded-md border bg-surface text-text text-left text-[15px] ' +
+  'placeholder:text-text-subtle focus:outline-none resize-y'
+
 /** Border/focus classes for the default vs error field state. */
 export function fieldStateClass(error?: boolean): string {
   return error
